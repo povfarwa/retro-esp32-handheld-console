@@ -39,3 +39,8 @@ Why i made this project?:
 
 I really love the 90's american era and also it is very nostalgic and also i got the idea from stasis tiers project then i thought why shouldnt made a deviice which i watch in the 90's movies and see the kids play games on it
 so thats why i make it . It just gives good vibes and also it is very simple
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+My Hackatime :
+https://hackatime.hackclub.com/my/projects
