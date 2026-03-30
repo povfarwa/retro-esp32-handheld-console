@@ -11,6 +11,22 @@ Hello! I am **Farwa Zafar** and I am 14 years old and a student from Pakistan. I
 3. **Joystick:** Controls the player movement.
 4. **Push Buttons:** Used for selecting menus or choosing games.
 
+
+---
+
+## 💡 Failures and Realization
+When I added the products to the list, it was time to design the schematic. First, I designed it on a paper page, but after some time, I realized that I made some mistakes. For example, I added a powerbank, but what’s its use when I am already using a battery? 
+
+I spent at least **2 hours** on it! When I tried to fix the problems, I even messed up more. Then I realized that I should make it digital because now I know my mistakes. Secondly, when I was making my PCB design, I really got stuck so many times, but at the end, I finally completed it!
+
+---
+
+## 🎮 Why I Made This Project?
+I really love the **90's American era**—it is very nostalgic. I got the idea from Stasis tiers project and thought: why shouldn't I make a device like the ones I watch in 90's movies? It gives good vibes and is very simple to play.
+
+---
+
+
 ---
 
 ## 🛠️ Materials & Bill of Materials (BoM)
@@ -33,18 +49,6 @@ This project contains the following hardware components:
 Here is the visual design of my console:
 
 ![Project Design](3D_Model.png)
-
----
-
-## 💡 Failures and Realization
-When I added the products to the list, it was time to design the schematic. First, I designed it on a paper page, but after some time, I realized that I made some mistakes. For example, I added a powerbank, but what’s its use when I am already using a battery? 
-
-I spent at least **2 hours** on it! When I tried to fix the problems, I even messed up more. Then I realized that I should make it digital because now I know my mistakes. Secondly, when I was making my PCB design, I really got stuck so many times, but at the end, I finally completed it!
-
----
-
-## 🎮 Why I Made This Project?
-I really love the **90's American era**—it is very nostalgic. I got the idea from Stasis tiers project and thought: why shouldn't I make a device like the ones I watch in 90's movies? It gives good vibes and is very simple to play.
 
 ---
 
