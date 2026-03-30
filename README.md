@@ -1,46 +1,55 @@
-Retro Handled Gaming Console
+# 🕹️ Retro Handled Gaming Console
 
-Introduction:
+## 📝 Introduction
+Hello! I am **Farwa Zafar** and I am a student from Pakistan. I am building an amazing project called **Retro Gaming Handled Console** using **ESP32-S3**, TFT display for graphics, buttons, and a joystick. In this project, you will be able to play 3 to 5 old classic games!
 
-Hello! i am Farwa Zafar and i am in 9 grade my age is 14 years. I am building an amazing project called retro gaming handled console using esp32 s3 , tft display for graphics , buttons and joystick
-in this project you will be able to play 3 to 5 old games
+---
 
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+## 🚀 Features Of My Project
+1. **ESP32-S3:** The main controller (Brain of the console).
+2. **TFT Display:** Shows the graphics and UI.
+3. **Joystick:** Controls the player movement.
+4. **Push Buttons:** Used for selecting menus or choosing games.
 
+---
 
-Features Of My Project:
+## 🛠️ Materials & Bill of Materials (BoM)
+This project contains the following hardware components:
 
-1- esp32 s3 as the main controller
-2- TFT Display that will show the garphics and ui
-3- Joystick that will control the movement
-4- buttons for other control like selecting the menu aur choosing which game to play
+| Component | Description | Quantity |
+| :--- | :--- | :--- |
+| **ESP32-S3** | Main Microcontroller | 1 |
+| **TFT Display** | For graphics and UI | 1 |
+| **Push Buttons** | For game controls | 8 |
+| **Switch** | On/Off Power button | 1 |
+| **Buzzer** | For game sounds | 1 |
+| **Battery** | Power source | 1 |
+| **Boost Converter** | J5019 3.7V to 5V/9V Adjustable | 1 |
+| **Others** | Veroboard, PCB, Jumper wires, Resistors | - |
 
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+---
 
+## 📸 Design & 3D Model
+Here is the visual design of my console:
 
-Materials that i use in this Project:
+![Project Design](3D_Model.png)
 
-this project contains : esp32 s2 , tft display , 8 push buttons , 1 on/off switch button , buzzer , a battery that will charge the device , a veroboard , pcb , J5019 3.7V 9V 5V 2A Adjustable Step Up 18650 Lithium Battery Charging Discharge Boost Converter ,
-hard jumper wires , and a resister
+---
 
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+## 💡 Failures and Realization
+When I added the products to the list, it was time to design the schematic. First, I designed it on a paper page, but after some time, I realized that I made some mistakes. For example, I added a powerbank, but what’s its use when I am already using a battery? 
 
+I spent at least **2 hours** on it! When I tried to fix the problems, I even messed up more. Then I realized that I should make it digital because now I know my mistakes. Secondly, when I was making my PCB design, I really got stuck so many times, but at the end, I finally completed it!
 
-Failures and Realization :
+---
 
-when i add the products to the list then it was turn to design the scematic first i designed it on a paper page but after sometime when i looked agin on it i realized that i maded some mistakes like i add the powerbank but whats it use when i am using the battery
-i spent atleast 2 hours on it when i tried to fix the problems i even messed up more then i realized that i should make it digital cause now i know my mistakes . and seconsly when i was making my pcb designed i really stuck up so many times but at the end i
-finally completed it 
+## 🎮 Why I Made This Project?
+I really love the **90's American era**—it is very nostalgic. I got the idea from Stasis tiers project and thought: why shouldn't I make a device like the ones I watch in 90's movies? It gives good vibes and is very simple to play.
 
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+---
 
+## 📊 My Coding Progress (Hackatime)
+You can track my live coding time here:
+![Hackatime Stats](https://hackatime.hackclub.com/api/v1/users/povfarwa/stats.svg)
 
-Why i made this project?:
-
-I really love the 90's american era and also it is very nostalgic and also i got the idea from stasis tiers project then i thought why shouldnt made a deviice which i watch in the 90's movies and see the kids play games on it
-so thats why i make it . It just gives good vibes and also it is very simple
-
------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-My Hackatime :
-https://hackatime.hackclub.com/my/projects
+[View my Hackatime Profile](https://hackatime.hackclub.com/povfarwa)
