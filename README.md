@@ -1,7 +1,7 @@
 # 🕹️ Retro Handled Gaming Console
 
 ## 📝 Introduction
-Hello! I am **Farwa Zafar** and I am a student from Pakistan. I am building an amazing project called **Retro Gaming Handled Console** using **ESP32-S3**, TFT display for graphics, buttons, and a joystick. In this project, you will be able to play 3 to 5 old classic games!
+Hello! I am **Farwa Zafar** and I am 14 years old and a student from Pakistan. I am building an amazing project called **Retro Gaming Handled Console** using **ESP32-S3**, TFT display for graphics, buttons, and a joystick. In this project, you will be able to play 3 to 5 old classic games!
 
 ---
 
@@ -49,7 +49,8 @@ I really love the **90's American era**—it is very nostalgic. I got the idea f
 ---
 
 ## 📊 My Coding Progress (Hackatime)
-You can track my live coding time here:
-![Hackatime Stats](https://hackatime.hackclub.com/api/v1/users/povfarwa/stats.svg)
+Click the graph below to see my full coding profile:
 
-[View my Hackatime Profile](https://hackatime.hackclub.com/povfarwa)
+[![Hackatime Stats](https://hackatime.hackclub.com/api/v1/users/povfarwa/stats.svg)](https://hackatime.hackclub.com/povfarwa)
+
+[View my Public Profile](https://hackatime.hackclub.com/povfarwa)
