@@ -55,7 +55,7 @@ Here is the digital schematic of my console design:
 ## 📸 Design & 3D Model
 Here is the visual design of my console:
 
-![Project Design](3D_PCB.step)
+![Project Design](3D_Model.png)
 
 ---
 
