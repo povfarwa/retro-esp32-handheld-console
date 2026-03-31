@@ -26,25 +26,6 @@ I really love the 90's American era it is very nostalgic. I got the idea from th
 
 ---
 
-## Materials & Bill of Materials (BOM)
-In this project the following hardware components are needed:
-
-|Components|Description|Quantity|Price|
-|:---|:---|:---|:---|
-|ESP32-S2|Main Controller|1|$5.72|
-|3.5 inch TFT Display|For graphics|1|$10.01|
-|Push Buttons|For game controls|8|$0.14|
-|Joystick|For movement|1|$0.64|
-|Switch|On/Off power button|1|$0.04|
-|Buzzer|for game sounds|1|$0.11|
-|Battery|power source|1|$1.97|
-|Booste Converter|J5019 3.7V to 5V/9V Adjustable|1|$0.50|
-|Veroboard|for soldering|1|$1.07|
-|Jumper Wires|for connections|1|$0.16|
-|Resistors|for safety|8|$0.06|
-|Other|PCB|
-
----
 
 ## Circuit Scematic
 Here is the digital scemtic of my device:
@@ -69,6 +50,25 @@ I want to say hge thank you to:
 
 **The Open Source Community:** For the amazing libraries that made this ESP32-S3 console possible to work
 ![Thank You](thankyou.gif)
+
+---
+## Materials & Bill of Materials (BOM)
+In this project the following hardware components are needed:
+
+|Components|Description|Quantity|Price|
+|:---|:---|:---|:---|
+|ESP32-S2|Main Controller|1|$5.72|
+|3.5 inch TFT Display|For graphics|1|$10.01|
+|Push Buttons|For game controls|8|$0.14|
+|Joystick|For movement|1|$0.64|
+|Switch|On/Off power button|1|$0.04|
+|Buzzer|for game sounds|1|$0.11|
+|Battery|power source|1|$1.97|
+|Booste Converter|J5019 3.7V to 5V/9V Adjustable|1|$0.50|
+|Veroboard|for soldering|1|$1.07|
+|Jumper Wires|for connections|1|$0.16|
+|Resistors|for safety|8|$0.06|
+|Other|PCB|
 
 ---
 
