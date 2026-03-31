@@ -40,6 +40,9 @@ Here is the visual design of my Gaming Console:
 ![Project Design](3D_Model.png)
 ![Project Design](3D_Model2.png)
 ![Project Design](3D_Model3.png)
+![Project Design](3D_Model6.png)
+![Project Design](3D_Model5.png)
+
 
 ---
 
