@@ -23,7 +23,7 @@ I spent at least **2 hours** on it! When I tried to fix the problems, I even mes
 
 ## 🎮 Why I Made This Project?
 I really love the **90's American era**—it is very nostalgic. I got the idea from Stasis tiers project and thought: why shouldn't I make a device like the ones I watch in 90's movies? It gives good vibes and is very simple to play.
-![90s Nostalgia Vibes](gifs/90s_vibes.gif)
+![90s Nostalgia Vibes](/gifs/90s_vibes.gif)
 
 
 ---
