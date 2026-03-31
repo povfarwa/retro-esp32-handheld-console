@@ -60,8 +60,8 @@ Here is the visual design of my console:
 ---
 
 ## 📊 My Coding Progress (Hackatime)
-Click the graph below to see my full coding profile:
+I am tracking my firmware development hours live. Click the graph below to see my full public profile:
 
 [![Hackatime Stats](https://hackatime.hackclub.com/api/v1/users/povfarwa/stats.svg)](https://hackatime.hackclub.com/povfarwa)
 
-[View my Public Profile](https://hackatime.hackclub.com/povfarwa)
+[🔗 View My Public Hackatime Profile](https://hackatime.hackclub.com/povfarwa)
