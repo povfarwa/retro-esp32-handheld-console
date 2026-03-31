@@ -62,9 +62,10 @@ Here is the visual design of my Gaming Console:
 
 ## Special Thanks
 I want to say hge thank you to:
-Hack Club and Stasis team: For providing this amazing platform to high schoolers like me to build and learn the electrons and hardware
-My Friend Chika: For helping me to understand the README requirements and guiding me through the submission process
-The Open Source Community: For the amazing libraries that made this ESP32-S3 console possible to work
+
+***Hack Club and Stasis team:** For providing this amazing platform to high schoolers like me to build and learn the electrons and hardware
+***My Friend Chika:** For helping me to understand the README requirements and guiding me through the submission process
+***The Open Source Community:** For the amazing libraries that made this ESP32-S3 console possible to work
 ![Thank You](thankyou.gif)
 
 ---
