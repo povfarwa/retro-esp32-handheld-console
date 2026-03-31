@@ -1,4 +1,4 @@
-# Retro Handled Gaming Console
+# Retro Handled Gaming Console 🎮
 
 ##Introduction
 Hello!! I am Farwa Zafar in 9 grade and i am 14 years old from pakistan I am building an amazing project called retro handled Gaming console using EsP32-S3 , TFT display , four buttons for slecting menu and four for the gaming control , joystick for movement . In this project 
