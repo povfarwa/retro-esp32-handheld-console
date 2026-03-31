@@ -26,7 +26,7 @@ I really love the 90's American era it is very nostalgic. I got the idea from th
 
 ---
 
-![Bill of materials](BOM.cvs)
+![Bill of materials](BOM.csv)
 
 ## Materials & Bill of Materials (BOM)
 In this project the following hardware components are needed:
