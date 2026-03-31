@@ -7,9 +7,9 @@ you will be able to play 5 to 6 old classic games
 ---
 
 ## Features Of My Project
-1. ESP32-S3 : The main controller that controls the device (Like brain of the console)
-2. TFT Display : Shows the Graphics and UI
-3. Joystick : Used for selecting menus, choosing games and for play games
+1. **ESP32-S3:** The main controller that controls the device (Like brain of the console)
+2. **TFT Display:** Shows the Graphics and UI
+3. **Joystick:** Used for selecting menus, choosing games and for play games
 
 ---
 
@@ -53,7 +53,7 @@ Here is the digital scemtic of my device:
 
 ---
 
-## Design & #D Model
+## Design & 3D Model
 Here is the visual design of my Gaming Console:
 
 ![Project Design](3D_Model.png)
