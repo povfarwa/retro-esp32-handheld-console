@@ -45,6 +45,13 @@ This project contains the following hardware components:
 
 ---
 
+### 🔌 Circuit Schematic
+Here is the digital schematic of my console design:
+
+![Project Schematic](Scematic.png)
+
+---
+
 ## 📸 Design & 3D Model
 Here is the visual design of my console:
 
