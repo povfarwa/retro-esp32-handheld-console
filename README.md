@@ -65,6 +65,7 @@ I want to say a huge thank you to:
 * **Hack Club & Stasis Team:** For providing this amazing platform to high schoolers like me to build and learn hardware.
 * **My Friend Chika:** For helping me understand the README requirements and guiding me through the submission process! 
 * **The Open Source Community:** For the amazing libraries that made this ESP32 console possible.
+  ![Thank You](thankyou.gif)
 
 ---
 ### ✨ Let's Connect!
