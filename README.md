@@ -58,9 +58,16 @@ Here is the visual design of my console:
 
 ---
 
-## 📊 My Coding Progress (Hackatime)
-I am tracking my firmware development hours live. Click the graph below to see my full public profile:
+---
 
-[![Hackatime Stats](https://hackatime.hackclub.com/api/v1/users/povfarwa/stats.svg)](https://hackatime.hackclub.com/povfarwa)
+## ❤️ Special Thanks
+I want to say a huge thank you to:
+* **Hack Club & Stasis Team:** For providing this amazing platform to high schoolers like me to build and learn hardware.
+* **My Friend Chika:** For helping me understand the README requirements and guiding me through the submission process! 
+* **The Open Source Community:** For the amazing libraries that made this ESP32 console possible.
 
-[🔗 View My Public Hackatime Profile](https://hackatime.hackclub.com/povfarwa)
+---
+### ✨ Let's Connect!
+If you have any suggestions for my retro console, feel free to open an issue or reach out! 
+
+**Made with ❤️ by Farwa Zafar**
