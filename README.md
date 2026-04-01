@@ -23,6 +23,7 @@ finnaly complete it
 
 ## Why I Made This Project?
 I really love the 90's American era it is very nostalgic. I got the idea from the Stasis tiers project then I thought why should not I make a device like the ones i watch in 90's movies? It gives good vibes and also it is very simple to play
+
 ![(0's Nostalgic Vibes](game.gif)
 
 ---
