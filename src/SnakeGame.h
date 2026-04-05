@@ -1,4 +1,4 @@
-#ifindef SNAKE_GAME_H
+#ifndef SNAKE_GAME_H
 #define SNAKE_GAME_H
 
 #include <Arduino.h>
@@ -37,6 +37,28 @@ namespace Snake{
     void spawnFood() {
         food.x = (random(0 , (screenWidth / dotSize)-1)) * dotSize;
         food.y = (random(random(0 , (screenHeight / dotSize)-1))) * dotSIze;
+    }
+
+    void resetGame(){
+        isGameOver = false;
+        score = 0; dirX = 1; dirY = 0;
+        snake.clear();
+        tft.fillScreen(TFT_BLACK);
+        int centerX = (screenWidth / 2 / dotSize) * dotSize;
+        int centerY = (screenWisth /2/ dotSize) * dotsize;
+        snake.push_back({centerX , centerY});
+        snake.push_back({centerX - dotsize, centerY});
+        snake.push_back({centerX - (2*dotSize), centerY});
+        for (auto const& segment : snake) tft.fillRect(segment.x, segment.y, dotSize, dotSize, TFT_RED)
+        spawnFood();
+    }
+
+    void play(){
+        if (isGameOver){
+            delay(2000;
+            resetGame();
+            return;
+        }
     }
 }
 
