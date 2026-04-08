@@ -63,6 +63,25 @@ namespace RacingCar{
             tft.fillRect(enemies=[i].x, enemies[i].y, carW, carH, TFT_DARKGREY)
 
             enemies[i].y += 6;
+
+            if(enemies[i].y > 320){
+                enemies.erase(enemies.begin() + i)
+                score++;
+                tft.fillRect(0, 0, 100, 30, TFT_BLACK);
+                tft.setTextColor(TFT_YELLOW)
+                tft.drawString("Score: " String(score); 10, 10,2;)
+            }else{
+                tft.fillRect(enemies[i].y + carH < carY && enemies[i].y < carY + carH){
+                    if(enemies[i].x + carW > carX && enemies[].x < carX + carW){
+                        isGameOver = true;
+                        digitalWrite(BUZZER, HIGH);
+                        delay(150); digitalWrite(BUZZER , LOW);
+                    }
+                }
+            }
         }
     }
+    delay(20)
 }
+
+#endif
