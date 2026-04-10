@@ -41,8 +41,30 @@ namespace Profile{
                 delay(200)
             }
             if(yVal < 1000){
-                player
+                playerName[charIndex]++;
+                if(playerNam[charIndex]> "Z") playerName[charIndex] = "A"
+                draw()
+                delay(200)
+            }
+
+            if(yVal > 3000){
+                playerName[charIndex]--;
+                if(playerName[charIndex] < "A") playerName[charIndex] = "Z";
+                draw()
+                delay(200)
+            }
+            if(xVal > 3000 && charIndex < playerName.length(-1)){
+                charIndex++
+                draw();
+                delay(200);
+            }
+            if(xVal < 1000 && charIndex > 0) {
+                charIndex--;
+                draw()
+                delay(200)
             }
         }
     }
 }
+
+#endif
