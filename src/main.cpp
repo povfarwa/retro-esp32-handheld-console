@@ -1,10 +1,22 @@
 #include <Arduino.h>
 #include <TFT_eSPI.h>
 
+#inlcude "SnakeGame.h"
+#include "SpaceShooter.h"
+#inlcude "FlappyBird.h"
+#include "MazeRunner.h"
+#include "DinoRun.h"
+#include "RacingCar.h"
+#include "Profile.h"
+#include "Settings.h"
+
 TFT_eSPI tft = TFT_eSPI();
 
+enum GameState {MENU, SNAKE, SPACE, FLAPPY, MAZE, DINO, RACER, PROFILE_EDIT, SETTINGS_SCREEN};
+GameState currentState = MENU;
+
 int selectedItem = 0;
-String gamenames[6]
+String gamenames[6] = {"SNAKE", "SPAE", "FLAPPY", "MAZE", "DINO", "RACER"};
 
 void drawTopMenu(){
     tft.fillRect(0,0,480,50,tft.color570(30,30,45))
@@ -114,7 +126,7 @@ void loop(){
             case DINO: DinoRun::play(); break;
             default: break;
         }
-        if(digital(6) == LOW) { currentState = MENU; drawMenu; delay(500;)}
+        if(digital(6) == LOW) { currentState = MENU; drawMenu; delay(500);}
     }
 
 }
