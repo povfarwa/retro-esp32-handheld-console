@@ -24,7 +24,7 @@ finnaly complete it
 ## Why I Made This Project?
 I really love the 90's American era it is very nostalgic. I got the idea from the Stasis tiers project then I thought why should not I make a device like the ones i watch in 90's movies? It gives good vibes and also it is very simple to play
 
-![(0's Nostalgic Vibes](game.gif)
+![(0's Nostalgic Vibes](./images/game.gif)
 
 ---
 
@@ -40,10 +40,10 @@ Here is the digital scemtic of my device:
 Here is the visual design of my Gaming Console:
 
 ![Project Design](./images/3D_Model.png)
-![Project Design](3D_Model2.png)
-![Project Design](3D_Model3.png)
-![Project Design](3D_Model6.png)
-![Project Design](3D_Model5.png)
+![Project Design](./iamges/3D_Model2.png)
+![Project Design](./images/3D_Model3.png)
+![Project Design](./images/3D_Model6.png)
+![Project Design](./images/3D_Model5.png)
 
 
 ---
@@ -56,7 +56,7 @@ I want to say hge thank you to:
 **My Friend Chika:** For helping me to understand the README requirements and guiding me through the submission process
 
 **The Open Source Community:** For the amazing libraries that made this ESP32-S3 console possible to work
-![Thank You](thankyou.gif)
+![Thank You](./images/thankyou.gif)
 
 ---
 ## Materials & Bill of Materials (BOM)
