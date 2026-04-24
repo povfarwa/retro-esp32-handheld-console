@@ -32,7 +32,7 @@ I really love the 90's American era it is very nostalgic. I got the idea from th
 ## Circuit Scematic
 Here is the digital scemtic of my device:
 
-![Project Scematic](Scematic.png)
+![Project Scematic](./images/Scematic.png)
 
 ---
 
