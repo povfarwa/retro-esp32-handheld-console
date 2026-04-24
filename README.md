@@ -39,7 +39,7 @@ Here is the digital scemtic of my device:
 ## Design & 3D Model
 Here is the visual design of my Gaming Console:
 
-![Project Design](3D_Model.png)
+![Project Design](./images/3D_Model.png)
 ![Project Design](3D_Model2.png)
 ![Project Design](3D_Model3.png)
 ![Project Design](3D_Model6.png)
