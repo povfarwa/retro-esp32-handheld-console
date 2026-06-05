@@ -6,6 +6,7 @@
 #include <vector>
 #include "globals.h"
 #include "sounds.h"
+#include "nvs_save.h"
 
 extern TFT_eSPI tft;
 
@@ -94,6 +95,7 @@ namespace FlappyBird {
                     isGameOver = true;
                     if (g_app.soundOn) Sounds::sfxGameOver();
                     g_app.highScores[2] = max(g_app.highScores[2], (uint32_t)score);
+                    NVS::save();
                     return;
                 }
             }
@@ -118,11 +120,14 @@ namespace FlappyBird {
         // Remove off-screen pipes
         pipes.erase(std::remove_if(pipes.begin(), pipes.end(), [](Pipe& p) { return p.x < -PIPE_W; }), pipes.end());
 
-        // Ground / ceiling collision
-        if (birdY > 280 || birdY < 5) {
+        // Ground / ceiling collision (bird radius = BIRD_SIZE = 10)
+        // Ground at y=290 → bird center touches ground at y=280
+        // Ceiling at y=0 → bird center touches ceiling at y=10
+        if (birdY >= 280 || birdY < BIRD_SIZE) {
             isGameOver = true;
             if (g_app.soundOn) Sounds::sfxGameOver();
             g_app.highScores[2] = max(g_app.highScores[2], (uint32_t)score);
+            NVS::save();
             return;
         }
 

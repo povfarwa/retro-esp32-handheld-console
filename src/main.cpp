@@ -7,6 +7,7 @@
 #include "settings.h"
 #include "input.h"
 #include "sounds.h"
+#include "nvs_save.h"
 
 // Game headers
 #include "SnakeGame.h"
@@ -76,6 +77,9 @@ void setup() {
     Menu::init();
     Settings::init();
     Profile::init();
+
+    // ── Load NVS settings ──
+    NVS::load();
 
     // ── Welcome screen ──
     tft.fillScreen(C_BG);        // Deep navy background

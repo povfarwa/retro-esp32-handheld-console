@@ -1,0 +1,60 @@
+#ifndef NVS_SAVE_H
+#define NVS_SAVE_H
+
+#include <Preferences.h>
+#include "globals.h"
+
+// ── NVS Save/Load ──────────────────────────────────────────────────
+// Persists AppState to ESP32 non-volatile storage so values survive
+// reset / power loss.  Uses the Preferences library (NVS namespace).
+//
+// Saved fields:
+//   playerName[16]  → key "name"       (String)
+//   brightness      → key "bright"     (uint8_t)
+//   soundOn         → key "sound"      (bool)
+//   highScores[6]   → keys "hs0"…"hs5" (uint32_t)
+//
+// Namespace:  "retro-console"
+// ───────────────────────────────────────────────────────────────────
+
+namespace NVS {
+
+    static void save() {
+        Preferences prefs;
+        prefs.begin("retro-console", false);   // false = read/write
+
+        prefs.putString("name",   g_app.playerName);
+        prefs.putUChar("bright",  g_app.brightness);
+        prefs.putBool("sound",    g_app.soundOn);
+
+        for (int i = 0; i < 6; i++) {
+            char key[4];
+            snprintf(key, sizeof(key), "hs%u", i);
+            prefs.putULong(key, g_app.highScores[i]);
+        }
+
+        prefs.end();
+    }
+
+    static void load() {
+        Preferences prefs;
+        prefs.begin("retro-console", true);    // true = read-only
+
+        String name = prefs.getString("name", "Player");
+        strlcpy(g_app.playerName, name.c_str(), sizeof(g_app.playerName));
+
+        g_app.brightness = prefs.getUChar("bright", 75);
+        g_app.soundOn     = prefs.getBool("sound",   true);
+
+        for (int i = 0; i < 6; i++) {
+            char key[4];
+            snprintf(key, sizeof(key), "hs%u", i);
+            g_app.highScores[i] = prefs.getULong(key, 0);
+        }
+
+        prefs.end();
+    }
+
+}   // namespace NVS
+
+#endif  // NVS_SAVE_H

@@ -5,6 +5,7 @@
 #include <TFT_eSPI.h>
 #include "globals.h"
 #include "sounds.h"
+#include "nvs_save.h"
 
 extern TFT_eSPI tft;
 
@@ -122,7 +123,9 @@ namespace MazeRunner {
             won = true;
             isGameOver = true;
             if (g_app.soundOn) Sounds::sfxVictory();
-            g_app.highScores[3] = max(g_app.highScores[3], (uint32_t)(1000 - moves));
+            int rawScore = 1000 - moves;
+            g_app.highScores[3] = max(g_app.highScores[3], (uint32_t)max(0, rawScore));
+            NVS::save();
         }
     }
 

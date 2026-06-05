@@ -43,18 +43,21 @@ extern TFT_eSPI tft;
 #define C_MAGENTA    0xF81F
 #define C_ORANGE     0xFD20
 
-#define C_BG         0x0C12   // #0C1828 deep navy
-#define C_SIDE       0x0E1A   // slightly lighter navy for side panels
-#define C_PANEL      0x1A4A   // tile / card background (steel blue-grey)
+#define C_BG         0x0848   // #0C1020 very dark slate-gray (main bg)
+#define C_SIDE       0x0A1A   // slightly lighter for side panels
+#define C_PANEL      0x1C4A   // steel blue-grey for tiles/cards
 #define C_PANEL2     0x1830   // darker panel for nav items
-#define C_PANEL_SEL  0x2B9F   // selected tile (light blue outline fill)
-#define C_OUTLINE    0x051F   // electric blue outline / accent
-#define C_ACCENT     0x07BF   // cyan accent (WiFi icon, glow lines)
-#define C_LABEL_BG   0x1C4A   // rounded label background (HOME / SETTINGS title)
+#define C_PANEL_SEL  0x0C2F   // selected tile fill (darkened)
+#define C_STATUS_PILL 0x1C4A  // light slate-gray pill for status bar
+#define C_PILL_DARK  0x0A18   // dark capsule for battery/wifi indicators
+#define C_OUTLINE    0x051F   // electric blue outline
+#define C_ACCENT     0x07BF   // cyan accent (WiFi icon, glow, borders)
+#define C_LABEL_BG   0x1C4A   // rounded label background (HOME title)
 #define C_TEXT       0xFFFF   // white
 #define C_TEXT_DIM   0x8C71   // grey text
-#define C_TEXT_BLUE  0x05FF   // light cyan text (Connected, time)
-#define C_NAV_BG     0x0E1A   // nav bar background
+#define C_TEXT_BLUE  0x05FF   // light cyan for "Connected"
+#define C_TILE_BORDER 0x033F  // bright blue border on selected tile
+#define C_NAV_BG     0x0A1A   // nav bar background
 #define C_NAV_SEL    0x1830   // selected nav item darker pill
 
 // ── App screens ───────────────────────────────────────────────────

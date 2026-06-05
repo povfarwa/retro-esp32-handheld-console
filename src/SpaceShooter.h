@@ -6,6 +6,7 @@
 #include <vector>
 #include "globals.h"
 #include "sounds.h"
+#include "nvs_save.h"
 
 extern TFT_eSPI tft;
 
@@ -99,6 +100,7 @@ namespace SpaceShooter {
                     isGameOver = true;
                     if (g_app.soundOn) Sounds::sfxGameOver();
                     g_app.highScores[1] = max(g_app.highScores[1], (uint32_t)score);
+                    NVS::save();
                     return;
                 }
                 continue;

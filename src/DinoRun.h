@@ -6,6 +6,7 @@
 #include <vector>
 #include "globals.h"
 #include "sounds.h"
+#include "nvs_save.h"
 
 extern TFT_eSPI tft;
 
@@ -60,8 +61,8 @@ namespace DinoRun {
         }
 
         // --- Physics ---
-        // Erase old dino
-        tft.fillRect(DINO_X - 2, (int)(dinoY - velocity - 2) - 2, 24, 30, C_WHITE);
+        // Erase old dino at current position before updating physics
+        tft.fillRect(DINO_X - 8, dinoY - 12, 30, 44, C_WHITE);
 
         velocity += GRAVITY;
         dinoY += (int)velocity;
@@ -92,12 +93,15 @@ namespace DinoRun {
             tft.fillRect(o.x - 4, groundY - 22, 6, 12, C_GREEN);
             tft.fillRect(o.x + 10, groundY - 18, 6, 8, C_GREEN);
 
-            // Collision check
-            if (o.x < DINO_X + 18 && o.x + 12 > DINO_X && dinoY + 25 > groundY - 30) {
+            // Collision check — hitbox matches visual cactus including branches
+            // Left branch at o.x-4, right branch up to o.x+16, top at groundY-36
+            if (o.x - 4 < DINO_X + 18 && o.x + 16 > DINO_X &&
+                dinoY + 25 > groundY - 36 && dinoY < groundY) {
                 isGameOver = true;
                 if (g_app.soundOn) Sounds::sfxGameOver();
                 highScore = max(highScore, score);
                 g_app.highScores[4] = max(g_app.highScores[4], (uint32_t)score);
+                NVS::save();
                 return;
             }
         }

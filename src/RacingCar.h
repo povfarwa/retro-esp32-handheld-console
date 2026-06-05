@@ -6,6 +6,7 @@
 #include <vector>
 #include "globals.h"
 #include "sounds.h"
+#include "nvs_save.h"
 
 extern TFT_eSPI tft;
 
@@ -63,6 +64,18 @@ namespace RacingCar {
         tft.drawString("SCORE: 0", 5, 10, 2);
         tft.setTextColor(C_WHITE, C_BLACK);
         tft.drawString("LIVES: " + String(lives), 370, 10, 2);
+
+        // Draw player car immediately so it's visible from frame 1
+        tft.fillRect(carX, CAR_Y, CAR_W, CAR_H, C_BLUE);
+        tft.fillRect(carX + 4, CAR_Y + 10, 8, 12, C_CYAN);
+        tft.fillRect(carX + 20, CAR_Y + 10, 8, 12, C_CYAN);
+        tft.fillRect(carX + 2, CAR_Y + 4, CAR_W - 4, 6, 0x5D5D);
+        tft.fillRect(carX - 3, CAR_Y + 10, 4, 10, C_BLACK);
+        tft.fillRect(carX - 3, CAR_Y + CAR_H - 20, 4, 10, C_BLACK);
+        tft.fillRect(carX + CAR_W - 1, CAR_Y + 10, 4, 10, C_BLACK);
+        tft.fillRect(carX + CAR_W - 1, CAR_Y + CAR_H - 20, 4, 10, C_BLACK);
+        tft.fillCircle(carX + 6, CAR_Y + CAR_H - 2, 3, C_YELLOW);
+        tft.fillCircle(carX + CAR_W - 6, CAR_Y + CAR_H - 2, 3, C_YELLOW);
     }
 
     static void play() {
@@ -74,8 +87,8 @@ namespace RacingCar {
         else if (g_input.joyX < -40 || g_input.btnDP) carX -= 5;
         carX = constrain(carX, ROAD_LEFT + 5, ROAD_RIGHT - CAR_W - 5);
 
-        // Erase car at old position
-        tft.fillRect(oldCarX, CAR_Y, CAR_W, CAR_H, 0x3186); // road color
+        // Erase car at old position (wider to cover wheels that extend 3px beyond body)
+        tft.fillRect(oldCarX - 4, CAR_Y, CAR_W + 8, CAR_H, 0x3186); // road color
 
         // --- Spawn enemies ---
         if (millis() - lastEnemy > (unsigned long)random(600, 1500)) {
@@ -88,8 +101,8 @@ namespace RacingCar {
         // --- Move enemies & check ---
         for (auto& e : enemies) {
             if (!e.active) continue;
-            // Erase old
-            tft.fillRect(e.x, e.y, CAR_W, CAR_H, 0x3186);
+            // Erase old (wider to cover wheels that extend beyond car body)
+            tft.fillRect(e.x - 4, e.y, CAR_W + 8, CAR_H, 0x3186);
             e.y += enemySpeed;
 
             // Remove if off-screen
@@ -126,6 +139,7 @@ namespace RacingCar {
                     isGameOver = true;
                     if (g_app.soundOn) Sounds::sfxGameOver();
                     g_app.highScores[5] = max(g_app.highScores[5], (uint32_t)score);
+                    NVS::save();
                     return;
                 }
             }

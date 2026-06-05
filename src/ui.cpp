@@ -13,156 +13,162 @@ void UI::drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h,
     tft.drawRoundRect(x, y, w, h, r, color);
 }
 
-// ─── Status bar ──────────────────────────────────────────────────
-// Matches: "STASIS GAMING  [batt 25%]  07:30 PM  [wifi] WiFi (Connected)"
+// ─── Status Bar ──────────────────────────────────────────────────
+// Light slate-gray pill shape across top on dark background.
+// Layout:  STASIS GAMING  [batt 25%]    07:30 PM    [WiFi (Connected)]
 void UI::drawStatusBar() {
-    // Background pill
-    tft.fillRoundRect(4, 4, SCREEN_W - 8, STATUS_H - 8, 12, C_PANEL);
+    int barX = 4, barY = 4, barW = SCREEN_W - 8, barH = STATUS_H - 8;
+    int barR = barH / 2;
 
-    // Brand name
-    tft.setTextColor(C_TEXT, C_PANEL);
+    // Main pill background
+    tft.fillRoundRect(barX, barY, barW, barH, barR, C_STATUS_PILL);
+    tft.drawRoundRect(barX, barY, barW, barH, barR, C_TEXT_DIM);
+
+    int midY = barY + barH / 2;
     tft.setTextDatum(ML_DATUM);
+
+    // ── "STASIS GAMING" (left) ──
+    tft.setTextColor(C_TEXT, C_STATUS_PILL);
     tft.setTextSize(1);
-    tft.setFreeFont(1);
-    tft.setTextSize(2);
-    tft.drawString("STASIS GAMING", 12, STATUS_H / 2);
+    tft.drawString("STASIS GAMING", 14, midY + 2);
 
-    // Battery pill  (left-centre area)
-    int bx = 190, by = 7, bw = 72, bh = 22;
-    tft.fillRoundRect(bx, by, bw, bh, 5, C_PANEL);
-    tft.drawRoundRect(bx, by, bw, bh, 5, C_TEXT_DIM);
-    // Battery terminal nub
-    tft.fillRect(bx + bw, by + 7, 4, 8, C_TEXT_DIM);
-    // Fill level (25% example – will use actual later)
-    uint8_t pct = 25;
-    uint16_t fillColor = (pct < 20) ? C_RED : (pct < 50) ? C_YELLOW : C_GREEN;
-    int fillW = max(2, (int)((bw - 6) * pct / 100));
-    tft.fillRoundRect(bx + 3, by + 3, fillW, bh - 6, 3, fillColor);
-    // Percent text
-    tft.setTextSize(1);
-    tft.setTextColor(C_TEXT, C_PANEL2);
+    // ── Battery capsule (left-centre) ──
+    int battX = 170, battY = barY + 3, battW = 74, battH = barH - 6;
+    int battR = battH / 2;
+    tft.fillRoundRect(battX, battY, battW, battH, battR, C_PILL_DARK);
+    tft.drawRoundRect(battX, battY, battW, battH, battR, C_TEXT_DIM);
+    // Terminal nub
+    tft.fillRect(battX + battW, battY + 5, 3, battH - 10, C_TEXT_DIM);
+
+    // Blue battery outline icon (inside capsule)
+    uint16_t battBlue = C_ACCENT;
+    int icX = battX + 6, icY = midY;
+    // Outline battery shape
+    tft.drawRect(icX, icY - 5, 12, 10, battBlue);
+    tft.drawRect(icX - 1, icY - 4, 1, 8, battBlue);  // left thick
+    tft.drawRect(icX + 12, icY - 3, 2, 6, battBlue);  // terminal
+    // Fill 3 bars for ~25%
+    tft.fillRect(icX + 2, icY - 2, 2, 4, battBlue);
+    tft.fillRect(icX + 5, icY - 2, 2, 4, battBlue);
+    // 25% text
+    tft.setTextColor(C_TEXT, C_PILL_DARK);
+    tft.setTextDatum(ML_DATUM);
+    tft.drawString("25%", icX + 18, midY + 1);
+
+    // ── Time (center) ──
     tft.setTextDatum(MC_DATUM);
-    char buf[8]; sprintf(buf, "%d%%", pct);
-    tft.drawString(buf, bx + bw / 2, by + bh / 2);
-
-    // Time (centre of bar)
+    tft.setTextColor(C_TEXT, C_STATUS_PILL);
     tft.setTextSize(2);
-    tft.setTextColor(C_TEXT, C_PANEL);
-    tft.setTextDatum(MC_DATUM);
-
-    // Get time string — use millis as fake clock for now
-    // In real firmware swap with RTC or NTP
+    // Fake time from millis
     uint32_t s   = millis() / 1000;
     uint32_t min_ = (s / 60) % 60;
     uint32_t hr  = (s / 3600) % 24;
-    char timeBuf[12];
-    sprintf(timeBuf, "%02d:%02d %s", hr % 12 == 0 ? 12 : hr % 12, min_, hr < 12 ? "AM" : "PM");
-    tft.drawString(timeBuf, SCREEN_W / 2, STATUS_H / 2);
+    char buf[12];
+    sprintf(buf, "%02d:%02d %s",
+        hr % 12 == 0 ? 12 : hr % 12, min_, hr < 12 ? "AM" : "PM");
+    tft.drawString(buf, SCREEN_W / 2, midY + 2);
 
-    // WiFi pill (right side)
-    int wx = SCREEN_W - 170, wy = 5, ww = 164, wh = STATUS_H - 10;
-    tft.fillRoundRect(wx, wy, ww, wh, 11, C_PANEL);
-    tft.drawRoundRect(wx, wy, ww, wh, 11, C_ACCENT);
+    // ── WiFi capsule (right) ──
+    int wifiX = SCREEN_W - 178, wifiY = barY + 3, wifiW = 172, wifiH = barH - 6;
+    int wifiR = wifiH / 2;
+    tft.fillRoundRect(wifiX, wifiY, wifiW, wifiH, wifiR, C_PILL_DARK);
+    tft.drawRoundRect(wifiX, wifiY, wifiW, wifiH, wifiR, C_ACCENT);
 
-    // WiFi arc icon (simple 3-arc symbol)
-    int ic = wx + 20, iy = wy + wh / 2;
-    tft.drawCircle(ic, iy + 4, 2,  C_ACCENT);
-    tft.drawArc   (ic, iy + 4, 6,  5, 210, 330, C_ACCENT, C_PANEL);
-    tft.drawArc   (ic, iy + 4, 11, 9, 210, 330, C_ACCENT, C_PANEL);
-    tft.drawArc   (ic, iy + 4, 16, 13,210, 330, C_ACCENT, C_PANEL);
+    // WiFi arc icon (3 arcs)
+    int wcX = wifiX + 20, wcY = midY;
+    tft.fillCircle(wcX, wcY + 3, 2, C_ACCENT);
+    tft.drawArc(wcX, wcY + 3, 5, 4, 210, 330, C_ACCENT, C_PILL_DARK);
+    tft.drawArc(wcX, wcY + 3, 10, 8, 210, 330, C_ACCENT, C_PILL_DARK);
+    tft.drawArc(wcX, wcY + 3, 15, 12, 210, 330, C_ACCENT, C_PILL_DARK);
 
-    // WiFi label
-    tft.setTextSize(1);
-    tft.setTextColor(C_TEXT, C_PANEL);
     tft.setTextDatum(ML_DATUM);
-    tft.drawString("WiFi", wx + 32, iy - 4);
-    tft.setTextColor(C_TEXT_BLUE, C_PANEL);
-    tft.drawString("(Connected)", wx + 32, iy + 8);
+    tft.setTextColor(C_TEXT, C_PILL_DARK);
+    tft.drawString("WiFi", wcX + 24, midY - 5);
+    tft.setTextColor(C_TEXT_BLUE, C_PILL_DARK);
+    tft.drawString("(Connected)", wcX + 24, midY + 7);
 }
 
 // ─── Title label ─────────────────────────────────────────────────
-// Rounded pill, centred above content, connected by thin lines to side panels
+// Pill-shaped header centered at top of main container
 void UI::drawTitle(const char* title) {
-    int tw  = 160, th = 34;
-    int tx  = (SCREEN_W - tw) / 2;
-    int ty  = INNER_Y + 8;
+    int tw = 160, th = 34;
+    int tx = (SCREEN_W - tw) / 2;
+    int ty = INNER_Y + 8;
 
-    // Horizontal connecting lines from side panels to title box
-    tft.drawLine(SIDE_W, ty + th / 2, tx, ty + th / 2, C_TEXT_DIM);
-    tft.drawLine(tx + tw, ty + th / 2, SCREEN_W - SIDE_W, ty + th / 2, C_TEXT_DIM);
+    // Horizontal connecting lines from side panels to title pill
+    tft.drawLine(SIDE_W + 4, ty + th / 2, tx, ty + th / 2, C_TEXT_DIM);
+    tft.drawLine(tx + tw, ty + th / 2, SCREEN_W - SIDE_W - 4, ty + th / 2, C_TEXT_DIM);
 
     // Title pill
-    tft.fillRoundRect(tx, ty, tw, th, 10, C_LABEL_BG);
-    tft.drawRoundRect(tx, ty, tw, th, 10, C_TEXT_DIM);
+    tft.fillRoundRect(tx, ty, tw, th, th / 2, C_LABEL_BG);
+    tft.drawRoundRect(tx, ty, tw, th, th / 2, C_TEXT_DIM);
 
     tft.setTextColor(C_TEXT, C_LABEL_BG);
     tft.setTextDatum(MC_DATUM);
     tft.setTextSize(2);
-    tft.drawString(title, SCREEN_W / 2, ty + th / 2 + 1);
+    tft.drawString(title, SCREEN_W / 2, ty + th / 2 + 2);
 }
 
 // ─── Nav bar ─────────────────────────────────────────────────────
-// Three buttons: BACK | SETTINGS | PROFILE
+// Three items:  <- BACK  |  SETTINGS (gear)  |  PROFILE (person)
 void UI::drawNavBar(NavActive nav) {
     // Background strip
     tft.fillRect(0, NAV_Y, SCREEN_W, NAV_H, C_NAV_BG);
     tft.drawLine(0, NAV_Y, SCREEN_W, NAV_Y, C_PANEL);
 
-    // Three nav items
     const char* labels[3]  = {"BACK", "SETTINGS", "PROFILE"};
     int xs[3] = {0, SCREEN_W / 3, SCREEN_W * 2 / 3};
-    int bw     = SCREEN_W / 3;
-    int bh     = NAV_H - 6;
-    int by_    = NAV_Y + 3;
+    int bw    = SCREEN_W / 3;
+    int bh    = NAV_H - 6;
+    int by_   = NAV_Y + 3;
 
     for (int i = 0; i < 3; i++) {
         bool active = (int)nav == i;
-        uint16_t bg  = active ? C_PANEL2 : C_NAV_BG;
-        uint16_t fg  = active ? C_TEXT   : C_TEXT_DIM;
+        uint16_t bg = active ? C_NAV_SEL : C_NAV_BG;
+        uint16_t fg = active ? C_TEXT    : C_TEXT_DIM;
 
         if (active) {
-            tft.fillRoundRect(xs[i] + 2, by_, bw - 4, bh, 8, bg);
-            tft.drawRoundRect(xs[i] + 2, by_, bw - 4, bh, 8, C_ACCENT);
+            tft.fillRoundRect(xs[i] + 4, by_, bw - 8, bh, 8, bg);
+            tft.drawRoundRect(xs[i] + 4, by_, bw - 8, bh, 8, C_ACCENT);
         }
 
-        // Icon
         int cx = xs[i] + bw / 2;
         int cy = by_ + bh / 2;
+        int ix = cx - 24;  // icon x offset
 
         if (i == 0) {
-            // Back arrow circle
-            tft.drawCircle(cx - 24, cy, 9, fg);
-            tft.drawLine(cx - 28, cy, cx - 19, cy,     fg);
-            tft.drawLine(cx - 28, cy, cx - 24, cy - 4, fg);
-            tft.drawLine(cx - 28, cy, cx - 24, cy + 4, fg);
+            // ← Back arrow (circle with left arrow)
+            tft.drawCircle(ix + 2, cy, 9, fg);
+            tft.drawLine(ix - 2, cy, ix + 7, cy, fg);
+            tft.drawLine(ix - 2, cy, ix + 2, cy - 4, fg);
+            tft.drawLine(ix - 2, cy, ix + 2, cy + 4, fg);
         } else if (i == 1) {
-            // Gear (settings) — simplified
-            tft.drawCircle(cx - 22, cy, 6, fg);
-            tft.drawCircle(cx - 22, cy, 3, fg);
+            // Gear (settings) - circle with outer teeth
+            tft.fillCircle(ix + 2, cy, 5, fg);
+            tft.drawCircle(ix + 2, cy, 5, fg);
             for (int a = 0; a < 360; a += 45) {
                 float rad = a * 0.01745;
                 int ox = (int)(cos(rad) * 9);
                 int oy = (int)(sin(rad) * 9);
-                tft.fillRect(cx - 22 + ox - 1, cy + oy - 1, 3, 3, fg);
+                tft.fillRect(ix + ox, cy + oy - 1, 3, 3, fg);
             }
         } else {
             // Person icon
-            tft.drawCircle(cx - 22, cy - 6, 4, fg);
-            tft.drawLine(cx - 26, cy + 8, cx - 22, cy - 2, fg);
-            tft.drawLine(cx - 18, cy + 8, cx - 22, cy - 2, fg);
-            tft.drawLine(cx - 26, cy + 8, cx - 18, cy + 8, fg);
+            tft.fillCircle(ix + 2, cy - 5, 4, fg);
+            tft.drawLine(ix - 3, cy + 9, ix + 2, cy - 1, fg);
+            tft.drawLine(ix + 7, cy + 9, ix + 2, cy - 1, fg);
+            tft.drawLine(ix - 3, cy + 9, ix + 7, cy + 9, fg);
         }
 
         // Label
-        tft.setTextColor(fg, active ? bg : C_NAV_BG);
+        tft.setTextColor(fg, bg);
         tft.setTextDatum(ML_DATUM);
         tft.setTextSize(1);
-        tft.drawString(labels[i], cx - 12, cy + 1);
+        tft.drawString(labels[i], cx - 14, cy + 1);
     }
 }
 
 // ─── Side panels ─────────────────────────────────────────────────
-// Dark vertical strips with circuit-board line decoration + blue glow accent
 void UI::drawSidePanels() {
     // Left panel
     tft.fillRect(0, STATUS_H, SIDE_W, INNER_H + 2, C_SIDE);
@@ -174,7 +180,7 @@ void UI::drawSidePanels() {
 
     // Left blue accent bar
     tft.fillRect(SIDE_W - 8, STATUS_H + 20, 6, INNER_H - 40, C_ACCENT);
-    // Arrow chevrons on left panel
+    // Chevrons on left panel
     for (int y_ = STATUS_H + 60; y_ < NAV_Y - 30; y_ += 30) {
         tft.drawLine(8,  y_,     18, y_ + 10, C_TEXT_DIM);
         tft.drawLine(18, y_ + 10, 8, y_ + 20, C_TEXT_DIM);
@@ -182,17 +188,15 @@ void UI::drawSidePanels() {
 
     // Right blue accent bar
     tft.fillRect(SCREEN_W - SIDE_W + 2, STATUS_H + 20, 6, INNER_H - 40, C_ACCENT);
-    // Arrow chevrons on right panel (pointing right)
     for (int y_ = STATUS_H + 60; y_ < NAV_Y - 30; y_ += 30) {
         tft.drawLine(SCREEN_W - 8,  y_,     SCREEN_W - 18, y_ + 10, C_TEXT_DIM);
         tft.drawLine(SCREEN_W - 18, y_ + 10, SCREEN_W - 8, y_ + 20, C_TEXT_DIM);
     }
 
-    // Circuit-board horizontal traces
+    // Circuit-board traces
     for (int y_ = STATUS_H + 30; y_ < NAV_Y - 10; y_ += 40) {
         tft.drawLine(4, y_, SIDE_W - 10, y_, C_TEXT_DIM);
         tft.drawLine(SCREEN_W - SIDE_W + 10, y_, SCREEN_W - 4, y_, C_TEXT_DIM);
-        // Junction dots
         tft.fillCircle(SIDE_W - 10, y_, 2, C_TEXT_DIM);
         tft.fillCircle(SCREEN_W - SIDE_W + 10, y_, 2, C_TEXT_DIM);
     }

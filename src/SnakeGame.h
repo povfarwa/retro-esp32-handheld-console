@@ -6,6 +6,7 @@
 #include <vector>
 #include "globals.h"
 #include "sounds.h"
+#include "nvs_save.h"
 
 extern TFT_eSPI tft;
 
@@ -90,16 +91,6 @@ namespace SnakeGame {
         if (newHead.y < 0) newHead.y = 320 - DOT_SIZE;
         else if (newHead.y >= 320) newHead.y = 0;
 
-        // Self-collision check
-        for (size_t i = 1; i < snake.size(); i++) {
-            if (newHead.x == snake[i].x && newHead.y == snake[i].y) {
-                isGameOver = true;
-                if (g_app.soundOn) Sounds::sfxGameOver();
-                g_app.highScores[0] = max(g_app.highScores[0], (uint32_t)score);
-                return;
-            }
-        }
-
         // Draw new head
         snake.insert(snake.begin(), newHead);
         tft.fillRect(newHead.x + 1, newHead.y + 1, DOT_SIZE - 2, DOT_SIZE - 2, C_GREEN);
@@ -116,6 +107,18 @@ namespace SnakeGame {
             Point tail = snake.back();
             tft.fillRect(tail.x, tail.y, DOT_SIZE, DOT_SIZE, C_BLACK);
             snake.pop_back();
+        }
+
+        // Self-collision check after tail removal (no false-positive
+        // when head moves into the tail's just-vacated position)
+        for (size_t i = 1; i < snake.size(); i++) {
+            if (newHead.x == snake[i].x && newHead.y == snake[i].y) {
+                isGameOver = true;
+                if (g_app.soundOn) Sounds::sfxGameOver();
+                g_app.highScores[0] = max(g_app.highScores[0], (uint32_t)score);
+                NVS::save();
+                return;
+            }
         }
 
         // Update score

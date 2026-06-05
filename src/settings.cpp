@@ -2,6 +2,7 @@
 #include "ui.h"
 #include "menu.h"
 #include "sounds.h"
+#include "nvs_save.h"
 
 // Focus: 0 = brightness slider, 1 = sound toggle
 static int  focus       = 0;
@@ -156,7 +157,10 @@ void Settings::update() {
         }
     }
 
-    if (changed) needsRedraw = true;
+    if (changed) {
+        needsRedraw = true;
+        NVS::save();
+    }
 
     // Back to main menu (Btn D = left button or joystick press on focus 0)
     if (g_input.joyBtnP && focus == 0) {

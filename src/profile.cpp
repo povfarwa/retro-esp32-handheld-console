@@ -3,6 +3,7 @@
 #include "menu.h"
 #include "settings.h"
 #include "sounds.h"
+#include "nvs_save.h"
 
 // Name editing state
 static int  nameLen     = 0;
@@ -161,6 +162,7 @@ void Profile::update() {
             editingName = false;
             needsRedraw = true;
             if (g_app.soundOn) Sounds::sfxSelect();
+            NVS::save();
             delay(200);
         }
     } else {
