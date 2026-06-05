@@ -2,107 +2,174 @@
 #define SPACE_SHOOTER_H
 
 #include <Arduino.h>
-#include <TFT_eSPI>
+#include <TFT_eSPI.h>
 #include <vector>
+#include "globals.h"
+#include "sounds.h"
 
 extern TFT_eSPI tft;
 
-namespace SpaceShoter {
-    #define JOY_X 1
-    #define BUZZER 46
-    #define BTN_FIRE 4
+namespace SpaceShooter {
+    struct Bullet { int x, y; bool active; };
+    struct Enemy { int x, y; bool active; };
 
-    int shipX = 240;
-    const int shipy = 290
-    int score = 0
-    bool is GameOver = false
-    struct Bullet { it x, y; };
-    struct Enemy { int x, y; }
-    std::vector<Bullet> bullets;
-    std::vector<Enemy> enemies
+    static int shipX = 240;
+    static const int SHIP_Y = 280;
+    static int score = 0;
+    static int lives = 3;
+    static bool isGameOver = false;
+    static bool gameStarted = false;
+    static std::vector<Bullet> bullets;
+    static std::vector<Enemy> enemies;
+    static unsigned long lastEnemySpawn = 0;
+    static unsigned long lastFire = 0;
+    static int enemySpeed = 3;
+    static int spawnRate = 1200;
+    static int level = 1;
 
-    unsigned long lastEnemySpawn = 0
-    unsigned long lastFire = 0
-
-    void reset() {
-        tft.fillScreen(TFT_BLACK)
-        shipX = 240
-        score = 0
-        isGameOver = false
-        bullets.clear()
-        enemies.clear()
-        tft.setTextColor(TFT_WHITE)
-        tft.drawString("Score: 0", 10, 10, 2)
+    static void reset() {
+        tft.fillScreen(C_BLACK);
+        shipX = 240;
+        score = 0;
+        lives = 3;
+        level = 1;
+        isGameOver = false;
+        gameStarted = true;
+        enemySpeed = 3;
+        spawnRate = 1200;
+        bullets.clear();
+        enemies.clear();
+        tft.setTextColor(C_WHITE, C_BLACK);
+        tft.setTextSize(1);
+        tft.drawString("SCORE: 0", 5, 5, 2);
+        tft.drawString("LIVES: 3", 380, 5, 2);
+        tft.drawString("LV:1", 200, 5, 2);
     }
 
-    void play(){
-      if(isGameOver){
-        tft.fillScreen(TFT_BLACK)
-        tft.setTextColor(TFT_RED)
-        tft.drawCentreString("GAME OVER", 240, 140, 4)
-        tft.setTextColor(TFT_WHITE)
-        tft.dawCentreSting("Score: " + String(score), 240, 180, 2)
-        delay(2000)
-        reset()
-        return
-      }
-       int xVal = analogRead(JOY_X)
-       tft.fillRect(shipX, shipY, 30, 20, TFT_BLACK)
-       if(xVal < 1200) shipX -= 6
-       if(xVal > 2800) shipX += 6
-       shipX = constraint(shipX, 0, 450)
-       tft.fillTringle(shipX, shipY+20, shipX+15, shipY, shipX+30, shipY+20< TFT_BLUE)
+    static void play() {
+        if (!gameStarted) { reset(); return; }
 
-       if(digitalRead(BTN_FIRE)== LOW && millis() - lastFire > 300){
-        bullets.push_back({shipX + 15, shipY})
-        digitalWrite(BUZZER, HIGH), delay(5), digitalWrite(BUZZER, LOW);
-        lastFire = millis()
-       }
+        // --- Input ---
+        if (g_input.joyX > 40 || g_input.btnAP) shipX += 5;
+        else if (g_input.joyX < -40 || g_input.btnDP) shipX -= 5;
+        shipX = constrain(shipX, 10, 440);
 
-       for (int i=0; i < bullets,size(); i++){
-        tft.fillRect(bullets[i].x, bullets[i].y, 2, 5, TFT_BLACK)
-        bullets[i].y -= 8
-        if(bullets[i].y < 0){
-            bullets.erase(bullets.begin() + i)
-        } else {
-            tft.fillRect(bullets[i].x, bullets[i].y, 2, 5, TFT_YELLOW)
-        }
-       }
-
-       if(millis()- lastEnemySpawn > 1500){
-        enemies.push.back({ (int)random(20, 460), 0 })
-        lastEnemySpawn = millis()
-       }
-
-       for(int i = 0, i < enemies.size(); i++){
-        tft.fillCircle(enemies[i].x, enemies[i].y 8, TFT_BLACK);
-        enemies[i].y += 3;
-        if(enemies[i].y > shipY && abs(enemies[i].x - (shipX+15)) < 20){
-            isGameOver = true
-            digitalWrite(BUZZER, HIGH), delay(200), digitalWrite(BUZZER, LOW);
+        // Fire
+        if ((g_input.joyBtnP || g_input.btnBP || g_input.joyY < -40) && millis() - lastFire > 300) {
+            bullets.push_back({shipX + 12, SHIP_Y, true});
+            if (g_app.soundOn) Sounds::sfxJump();
+            lastFire = millis();
         }
 
-        if(enemies[i].y > 320){
-            enemies.erase(enemies.begin() + i)
-        }else{
-            tft.fillCircle(enemies[i].x, enemies[i].y, 8, TFT_PURPLE);
+        // --- Clear ship area ---
+        tft.fillRect(shipX - 2, SHIP_Y, 34, 22, C_BLACK);
 
-            for (int j = 0; j < bullets.size.size(); j++){
-                if(abs(bullets[j].x - enemies[i].x) < 10 && abs(bullets[j].y - enemies[i].y) < 10){
-                    tft.fillCircle(enemies[i].x, enemies[i].y, 8, TFT_BLACK)
-                    enemies.erase(enemies.begin() + i)
-                    bullets.erase(bullets.begin() + j)
-                    score += 10;
-                    tft.fillRect(0, 0, 100, 30, TFT_BLACK);
-                    tft.setTextColor(TFT_WHITE)
-                    tft.drawString("Score: " + String(score), 10, 10, 2);
+        // --- Move & draw bullets ---
+        for (auto& b : bullets) {
+            if (!b.active) continue;
+            tft.fillRect(b.x, b.y, 4, 8, C_BLACK);
+            b.y -= 6;
+            if (b.y < 0) b.active = false;
+            else tft.fillRect(b.x, b.y, 4, 8, C_YELLOW);
+        }
+
+        // --- Spawn enemies ---
+        if (millis() - lastEnemySpawn > (unsigned long)spawnRate) {
+            enemies.push_back({(int)random(20, 460), 0, true});
+            lastEnemySpawn = millis();
+        }
+
+        // --- Move & draw enemies ---
+        for (auto& e : enemies) {
+            if (!e.active) continue;
+            tft.fillCircle(e.x, e.y, 8, C_BLACK);
+            e.y += enemySpeed;
+            if (e.y > 320) { e.active = false; continue; }
+
+            // Collision with ship
+            if (e.y + 8 > SHIP_Y && e.y - 8 < SHIP_Y + 20 &&
+                e.x + 8 > shipX && e.x - 8 < shipX + 30) {
+                e.active = false;
+                lives--;
+                if (g_app.soundOn) Sounds::sfxHit();
+                tft.fillRect(380, 5, 80, 15, C_BLACK);
+                tft.setTextColor(C_WHITE, C_BLACK);
+                tft.drawString("LIVES: " + String(lives), 380, 5, 2);
+                if (lives <= 0) {
+                    isGameOver = true;
+                    if (g_app.soundOn) Sounds::sfxGameOver();
+                    g_app.highScores[1] = max(g_app.highScores[1], (uint32_t)score);
+                    return;
+                }
+                continue;
+            }
+            tft.fillCircle(e.x, e.y, 8, C_MAGENTA);
+        }
+
+        // --- Bullet-Enemy collision ---
+        for (auto& b : bullets) {
+            if (!b.active) continue;
+            for (auto& e : enemies) {
+                if (!e.active) continue;
+                if (abs(b.x - e.x) < 12 && abs(b.y - e.y) < 12) {
+                    b.active = false;
+                    e.active = false;
+                    tft.fillCircle(e.x, e.y, 10, C_BLACK);
+                    score += 10 + level * 5;
+                    if (g_app.soundOn) Sounds::sfxPoint();
+                    tft.fillRect(0, 0, 120, 15, C_BLACK);
+                    tft.setTextColor(C_WHITE, C_BLACK);
+                    tft.drawString("SCORE: " + String(score), 5, 5, 2);
+
+                    // Level up every 100 points
+                    if (score > level * 100) {
+                        level++;
+                        enemySpeed = min(8, enemySpeed + 1);
+                        spawnRate = max(400, spawnRate - 100);
+                        tft.fillRect(200, 5, 60, 15, C_BLACK);
+                        tft.drawString("LV:" + String(level), 200, 5, 2);
+                        if (g_app.soundOn) Sounds::sfxVictory();
+                    }
                     break;
                 }
             }
         }
-       }
 
-       delay(20)
+        // --- Draw ship ---
+        tft.fillTriangle(shipX, SHIP_Y + 20, shipX + 15, SHIP_Y, shipX + 30, SHIP_Y + 20, C_BLUE);
+        tft.fillRect(shipX + 12, SHIP_Y - 5, 6, 8, C_RED);
+
+        // --- Cleanup ---
+        bullets.erase(std::remove_if(bullets.begin(), bullets.end(), [](Bullet& b) { return !b.active; }), bullets.end());
+        enemies.erase(std::remove_if(enemies.begin(), enemies.end(), [](Enemy& e) { return !e.active; }), enemies.end());
+
+        delay(20);
+    }
+
+    static void gameOverLoop() {
+        tft.fillScreen(C_BLACK);
+        tft.setTextColor(C_RED, C_BLACK);
+        tft.setTextSize(3);
+        tft.drawCentreString("GAME OVER", 240, 110, 1);
+        tft.setTextColor(C_WHITE, C_BLACK);
+        tft.setTextSize(2);
+        tft.drawCentreString("Score: " + String(score), 240, 160, 1);
+        tft.drawCentreString("Level: " + String(level), 240, 190, 1);
+        tft.drawCentreString("Press A to Restart", 240, 230, 1);
+        if (g_input.btnAP || g_input.joyBtnP) {
+            gameStarted = false;
+            isGameOver = false;
+        }
+    }
+
+    static void update() {
+        if (g_input.btnCP && isGameOver) {
+            gameStarted = false;
+            isGameOver = false;
+            return;
+        }
+        if (isGameOver) { gameOverLoop(); return; }
+        play();
     }
 }
 

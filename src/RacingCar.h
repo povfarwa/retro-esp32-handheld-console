@@ -3,85 +3,194 @@
 
 #include <Arduino.h>
 #include <TFT_eSPI.h>
-#inlcude <vector>
+#include <vector>
+#include "globals.h"
+#include "sounds.h"
 
 extern TFT_eSPI tft;
 
-namespace RacingCar{
-    #define JOY_X 1
-    #define BUZZER 46
+namespace RacingCar {
+    struct EnemyCar {
+        int x, y;
+        uint16_t color;
+        bool active;
+    };
 
-    int carX = 220;
-    const int carY = 260
-    const int carW = 30
-    const int carH = 50
+    static int carX = 220;
+    static const int CAR_Y = 245;
+    static const int CAR_W = 32;
+    static const int CAR_H = 48;
+    static const int ROAD_LEFT = 40;
+    static const int ROAD_RIGHT = 440;
+    static const int LANE_W = (ROAD_RIGHT - ROAD_LEFT) / 3;
 
-    struct EnemyCar { int x, y; unit_t color; }
-    std::vector<EnemyCar> enemies;
+    static int score = 0;
+    static int lives = 3;
+    static bool isGameOver = false;
+    static bool gameStarted = false;
+    static std::vector<EnemyCar> enemies;
+    static unsigned long lastEnemy = 0;
+    static int enemySpeed = 4;
+    static unsigned long lastScoreTime = 0;
 
-    int score = 0
-    bool isGameOver = false;
-    unsigned long lastEnemy = 0;
-
-    void reset() {
-        tft.fillScreen(TFT_DARKGREY)
-        tft.drawLine(100,0, 100,130), TFT_WHITE
-        tft.drawLine(300, 0, 380, 320, TFT_WHITE)
-
-        carX = 220
-        score = 0
-        isGameOver = false;
-        enemies.clear()
-        tft.setTextColor(TFT_YELLOW)
-        tft.drawString("Score 0" 10, 10, 2)
+    static void drawRoad() {
+        // Road background
+        tft.fillRect(ROAD_LEFT, 0, ROAD_RIGHT - ROAD_LEFT, 320, 0x3186); // dark grey asphalt
+        // Lane markings (dashed)
+        for (int y = 0; y < 320; y += 30) {
+            tft.fillRect(ROAD_LEFT + LANE_W - 2, y, 4, 15, C_WHITE);
+            tft.fillRect(ROAD_LEFT + LANE_W * 2 - 2, y, 4, 15, C_WHITE);
+        }
+        // Road edges
+        tft.drawLine(ROAD_LEFT, 0, ROAD_LEFT, 320, C_WHITE);
+        tft.drawLine(ROAD_RIGHT, 0, ROAD_RIGHT, 320, C_WHITE);
+        // Start/Finish line
+        tft.fillRect(ROAD_LEFT, 0, ROAD_RIGHT - ROAD_LEFT, 6, C_WHITE);
     }
 
-    void play(){
-        if(isGameOver) {
-            tft.fillScreen(TFT_BLACK)
-            tft.setTextColor(TFT_RED)
-            tft.drawCentreString("ACCIDENT", 240, 140, 4)
-            tft.setTestColor(TFT_WHITE)
-            tft.drawCentreString("Score: " + String(score), 240, 180, 2)
-            delay(2000);
-            reset()
-            return
+    static void reset() {
+        tft.fillScreen(C_BLACK);
+        carX = 220;
+        score = 0;
+        lives = 3;
+        isGameOver = false;
+        gameStarted = true;
+        enemySpeed = 4;
+        enemies.clear();
+        drawRoad();
+        tft.setTextColor(C_YELLOW, C_BLACK);
+        tft.setTextSize(1);
+        tft.drawString("SCORE: 0", 5, 10, 2);
+        tft.setTextColor(C_WHITE, C_BLACK);
+        tft.drawString("LIVES: " + String(lives), 370, 10, 2);
+    }
+
+    static void play() {
+        if (!gameStarted) { reset(); return; }
+
+        // --- Input ---
+        int oldCarX = carX;
+        if (g_input.joyX > 40 || g_input.btnAP) carX += 5;
+        else if (g_input.joyX < -40 || g_input.btnDP) carX -= 5;
+        carX = constrain(carX, ROAD_LEFT + 5, ROAD_RIGHT - CAR_W - 5);
+
+        // Erase car at old position
+        tft.fillRect(oldCarX, CAR_Y, CAR_W, CAR_H, 0x3186); // road color
+
+        // --- Spawn enemies ---
+        if (millis() - lastEnemy > (unsigned long)random(600, 1500)) {
+            int lane = random(0, 3);
+            int ex = ROAD_LEFT + 10 + lane * LANE_W;
+            enemies.push_back({ex, -CAR_H, C_RED, true});
+            lastEnemy = millis();
         }
 
-        int xVal = analogRead(JOY_X)
-        tft.fillRect(carX, carY, carW, carH, TFT_DARKGREY)
-        
-        if(xVal < 1200) carX -= 7
-        if(xVal > 2800) carX += 7;
-        carX = constrain(carX, 105, 300, -carW)
+        // --- Move enemies & check ---
+        for (auto& e : enemies) {
+            if (!e.active) continue;
+            // Erase old
+            tft.fillRect(e.x, e.y, CAR_W, CAR_H, 0x3186);
+            e.y += enemySpeed;
 
-        tft.fillRect(carX, carY, carW, carH, TFT_RED)
-        tft.fillRect(carX+5, carY-5, 5, 5, TFT_LIGHTGREY)
-        tft.fillRect(carX+20, carY-5, 5, 5, TFT_LIGHTGREY)
+            // Remove if off-screen
+            if (e.y > 320) {
+                e.active = false;
+                continue;
+            }
 
-        if(int i=0; i< enemies.size(); i++){
-            tft.fillRect(enemies=[i].x, enemies[i].y, carW, carH, TFT_DARKGREY)
+            // Draw enemy car
+            tft.fillRect(e.x, e.y, CAR_W, CAR_H, e.color);
+            // Windows
+            tft.fillRect(e.x + 4, e.y + 8, 8, 10, C_CYAN);
+            tft.fillRect(e.x + 20, e.y + 8, 8, 10, C_CYAN);
+            // Wheels
+            tft.fillRect(e.x - 3, e.y + 8, 4, 8, C_BLACK);
+            tft.fillRect(e.x - 3, e.y + CAR_H - 16, 4, 8, C_BLACK);
+            tft.fillRect(e.x + CAR_W - 1, e.y + 8, 4, 8, C_BLACK);
+            tft.fillRect(e.x + CAR_W - 1, e.y + CAR_H - 16, 4, 8, C_BLACK);
 
-            enemies[i].y += 6;
-
-            if(enemies[i].y > 320){
-                enemies.erase(enemies.begin() + i)
-                score++;
-                tft.fillRect(0, 0, 100, 30, TFT_BLACK);
-                tft.setTextColor(TFT_YELLOW)
-                tft.drawString("Score: " String(score); 10, 10,2;)
-            }else{
-                tft.fillRect(enemies[i].y + carH < carY && enemies[i].y < carY + carH){
-                    if(enemies[i].x + carW > carX && enemies[].x < carX + carW){
-                        isGameOver = true;
-                        digitalWrite(BUZZER, HIGH);
-                        delay(150); digitalWrite(BUZZER , LOW);
-                    }
+            // Collision detection
+            if (e.y + CAR_H > CAR_Y && e.y < CAR_Y + CAR_H &&
+                e.x + CAR_W > carX && e.x < carX + CAR_W) {
+                e.active = false;
+                lives--;
+                if (g_app.soundOn) Sounds::sfxHit();
+                // Flash screen red
+                tft.fillRect(carX, CAR_Y, CAR_W, CAR_H, C_RED);
+                delay(100);
+                tft.fillRect(carX, CAR_Y, CAR_W, CAR_H, 0x3186);
+                tft.fillRect(370, 10, 80, 15, C_BLACK);
+                tft.setTextColor(C_WHITE, C_BLACK);
+                tft.drawString("LIVES: " + String(lives), 370, 10, 2);
+                if (lives <= 0) {
+                    isGameOver = true;
+                    if (g_app.soundOn) Sounds::sfxGameOver();
+                    g_app.highScores[5] = max(g_app.highScores[5], (uint32_t)score);
+                    return;
                 }
             }
         }
+
+        // --- Draw player car ---
+        tft.fillRect(carX, CAR_Y, CAR_W, CAR_H, C_BLUE);
+        // Windows
+        tft.fillRect(carX + 4, CAR_Y + 10, 8, 12, C_CYAN);
+        tft.fillRect(carX + 20, CAR_Y + 10, 8, 12, C_CYAN);
+        // Windshield
+        tft.fillRect(carX + 2, CAR_Y + 4, CAR_W - 4, 6, 0x5D5D);
+        // Wheels
+        tft.fillRect(carX - 3, CAR_Y + 10, 4, 10, C_BLACK);
+        tft.fillRect(carX - 3, CAR_Y + CAR_H - 20, 4, 10, C_BLACK);
+        tft.fillRect(carX + CAR_W - 1, CAR_Y + 10, 4, 10, C_BLACK);
+        tft.fillRect(carX + CAR_W - 1, CAR_Y + CAR_H - 20, 4, 10, C_BLACK);
+        // Headlights
+        tft.fillCircle(carX + 6, CAR_Y + CAR_H - 2, 3, C_YELLOW);
+        tft.fillCircle(carX + CAR_W - 6, CAR_Y + CAR_H - 2, 3, C_YELLOW);
+
+        // --- Score (distance-based) ---
+        if (millis() - lastScoreTime > 200) {
+            score += 10;
+            lastScoreTime = millis();
+            tft.fillRect(0, 0, 120, 20, C_BLACK);
+            tft.setTextColor(C_YELLOW, C_BLACK);
+            tft.drawString("SCORE: " + String(score), 5, 10, 2);
+
+            // Difficulty increase
+            if (score % 200 == 0) {
+                enemySpeed = min(12, enemySpeed + 1);
+            }
+        }
+
+        // Cleanup
+        enemies.erase(std::remove_if(enemies.begin(), enemies.end(), [](EnemyCar& e) { return !e.active; }), enemies.end());
+
+        delay(20);
     }
-    delay(20)
+
+    static void gameOverLoop() {
+        tft.fillScreen(C_BLACK);
+        tft.setTextColor(C_RED, C_BLACK);
+        tft.setTextSize(3);
+        tft.drawCentreString("CRASH!", 240, 100, 1);
+        tft.setTextColor(C_WHITE, C_BLACK);
+        tft.setTextSize(2);
+        tft.drawCentreString("Score: " + String(score), 240, 150, 1);
+        tft.drawCentreString("Press A to Restart", 240, 210, 1);
+        if (g_input.btnAP || g_input.joyBtnP) {
+            gameStarted = false;
+            isGameOver = false;
+        }
+    }
+
+    static void update() {
+        if (g_input.btnCP && isGameOver) {
+            gameStarted = false;
+            isGameOver = false;
+            return;
+        }
+        if (isGameOver) { gameOverLoop(); return; }
+        play();
+    }
 }
 
 #endif
