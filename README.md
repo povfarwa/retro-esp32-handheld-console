@@ -2,8 +2,7 @@
 
 **Introduction:**
 
-Hello!! I am Farwa Zafar in 9 grade and i am 14 years old from pakistan I am building an amazing project called retro handled Gaming console using EsP32-S3 , TFT display , four buttons for slecting menu and four for the gaming control , joystick for movement . In this project 
-you will be able to play 5 to 6 old games
+Hello!! I am Farwa Zafar in 9 grade and i am 14 years old from pakistan I am building an amazing project called retro handled Gaming console using EsP32-S3 , TFT display , four buttons for the gaming control and selecting menu , joystick for movement and buzzer for sound, and lithium batter which will charge the console so you dont need to connect it to usb everytime and best part is that you can recharge it. In this project you will be able to play 6 old games
 
 ---
 
@@ -11,6 +10,8 @@ you will be able to play 5 to 6 old games
 1. **ESP32-S3:** The main controller that controls the device(like the brain)
 2. **TFT Display:** Shows the Graphics and UI
 3. **Joystick:** Used for selecting menus, choosing games and for play games
+4. **Charges:** It can be charged and also you dont need to connect the usb everytime
+5. **Buzzer Sound:**When using it the buzzer makes sound so it will improve the experience to use it
 
 ---
 ## My Console
@@ -19,6 +20,11 @@ you will be able to play 5 to 6 old games
 ![console](./images/console3.png)
 ![console](./images/console4.png)
 
+---
+### You cn see my whole console here:
+https://www.youtube.com/watch?v=nXrI39w5yM0
+
+https://www.youtube.com/watch?v=yK53IvrvP9o
 ---
 
 ## Failures And Realization
