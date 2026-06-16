@@ -21,11 +21,6 @@ you will be able to play 5 to 6 old games
 
 ---
 
-## Playing and testing on my gaming console
-![menu](./videos/menu.mp4)
-
----
-
 ## Failures And Realization
 When I added the products to the list it was time to design the scematic of the project First I designed it on the paper page but after sometime I realized hat I made a mistake like I added a poweer bank but why would i need power bank when I am already using the battery
 I spent at least 2 hours on it cause it was my first time. When I tried to fiz it I even messed up more then I realized that I should make it digital because now I know my mistakes and also when I ws making my PCB Design i really got stuck up many times but at the end I 
