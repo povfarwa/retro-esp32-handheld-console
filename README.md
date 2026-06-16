@@ -19,6 +19,9 @@ Hello!! I am Farwa Zafar in 9 grade and i am 14 years old from pakistan I am bui
 ![console](./images/console2.png)
 ![console](./images/console3.png)
 ![console](./images/console4.png)
+<img width="848" height="478" alt="image" src="https://github.com/user-attachments/assets/7541ebbc-806c-4c04-967d-762e91ffbe47" />
+<img width="322" height="572" alt="image" src="https://github.com/user-attachments/assets/0025cfa4-82e8-471c-8bb4-49496e82520f" />
+<img width="838" height="405" alt="image" src="https://github.com/user-attachments/assets/293b21eb-d8de-4b96-b90d-56271edd2a83" />
 
 ---
 ### You cn see my whole console here:
