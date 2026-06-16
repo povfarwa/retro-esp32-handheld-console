@@ -33,6 +33,8 @@ finnaly complete it.
 After getting the PCB I see that i made mistke as it was my first time using pcb and designing it i made mistakee and the components
 did not fit there . PCB have issue. then i realized that i should make it on veroboard.
 and also i even dont be able to put the video in my stasis journel i tried every methods but i cant be able to put the video.
+and also i tried to put the video into readme but still its not working then i think that why should i not put that video into youtube
+and then just put that video link into readme and journel
 
 ---
 
