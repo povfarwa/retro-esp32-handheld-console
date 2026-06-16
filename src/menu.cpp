@@ -7,42 +7,37 @@
 
 namespace Menu {
 
-// ── STASIS GAMING Cyberpunk Theme ──
-// Deep dark slate navy with bright cyan/blue neon accents
-
-static const uint16_t C_DARK_NAVY   = 0x0000;  // darkest dark (pure black)
-static const uint16_t C_SLATE       = 0x8C71;  // medium gray (darker than before, lighter than black bg)
-static const uint16_t C_NEON_BLUE   = 0x07FF;  // bright cyan
-static const uint16_t C_NEON_CYAN   = 0x06FF;  // electric cyan
-static const uint16_t C_CIRCUIT     = 0x00AA;  // circuit board teal
-static const uint16_t C_PILL_GRAY   = 0x8C71;  // medium gray for pill
-static const uint16_t C_STATUS_BG   = 0x4A69;  // status bar bg
-static const uint16_t C_BATTERY_BLUE= 0x061F;  // bright blue battery
-static const uint16_t C_WIFI_BLUE   = 0x061F;  // bright blue wifi
-static const uint16_t C_BLUE_GLOW   = 0x001F;  // blue glow border
+static const uint16_t C_DARK_NAVY   = 0x0000;
+static const uint16_t C_SLATE       = 0x8C71;
+static const uint16_t C_NEON_BLUE   = 0x07FF;
+static const uint16_t C_NEON_CYAN   = 0x06FF;
+static const uint16_t C_CIRCUIT     = 0x00AA;
+static const uint16_t C_PILL_GRAY   = 0x8C71;
+static const uint16_t C_STATUS_BG   = 0x4A69;
+static const uint16_t C_BATTERY_BLUE= 0x061F;
+static const uint16_t C_WIFI_BLUE   = 0x061F;
+static const uint16_t C_BLUE_GLOW   = 0x001F;
 
 struct GameEntry {
     int         id;
     const char* name;
-    int         iconIdx;   // index into gameIcons[]
+    int         iconIdx;
     const char* desc;
     uint16_t    color;
 };
 
-// 2×3 grid games
 static const GameEntry _games[GAME_COUNT] = {
     { GAME_SNAKE,         "SNAKE",         0, "Eat & grow!",          TFT_CYAN     },
     { GAME_SPACEINVADERS, "INVADERS",      1, "Shoot the aliens!",    TFT_GREEN    },
-    { GAME_PACMAN,        "SAMURAI FIGHT", 2, "Fight to the death!",   TFT_RED      },
+    { GAME_PACMAN,        "PAC-MAN",      2, "Eat all the dots!",      TFT_YELLOW   },
     { GAME_BRICKBREAKER,  "BRICK",         3, "Break all bricks!",    TFT_ORANGE   },
     { GAME_DINORUN,       "DINO RUN",      4, "Jump over cacti!",     TFT_RED      },
     { GAME_TETRIS,        "TETRIS",        5, "Clear the lines!",     TFT_MAGENTA  },
 };
 
-// Extra bottom nav items
-#define MENU_SETTINGS (GAME_COUNT)     // index = 6
-#define MENU_PROFILE  (GAME_COUNT + 1) // index = 7
-#define MENU_COUNT    (GAME_COUNT + 2) // total = 8
+#define MENU_SETTINGS (GAME_COUNT)
+#define MENU_PROFILE  (GAME_COUNT + 1)
+#define MENU_COUNT    (GAME_COUNT + 2)
 
 static const char* _extraNames[2] = { "SETTINGS", "PROFILE" };
 static const uint16_t _extraColors[2] = { C_NEON_BLUE, C_NEON_BLUE };
@@ -50,7 +45,6 @@ static const uint16_t _extraColors[2] = { C_NEON_BLUE, C_NEON_BLUE };
 static int _selected = 0;
 static int _prevSelected = -1;
 
-// ── Grid layout ──
 static const int GRID_COLS = 3;
 static const int GRID_ROWS = 2;
 static const int GRID_X    = 18;
@@ -59,17 +53,16 @@ static const int CELL_W    = 144;
 static const int CELL_H    = 76;
 static const int CELL_GAP  = 6;
 
-// ── Draw circuit patterns ──
 static void drawCircuitPattern(int x, int y, int w, int h) {
-    // Vertical circuit lines on left and right borders
+
     for (int yy = y; yy < y + h; yy += 16) {
-        // Left border
+
         tft.drawPixel(x + 2, yy, C_CIRCUIT);
         tft.drawPixel(x + 2, yy + 4, C_CIRCUIT);
         tft.drawPixel(x + 6, yy + 4, C_CIRCUIT);
         tft.drawPixel(x + 6, yy + 8, C_CIRCUIT);
         tft.drawPixel(x + 2, yy + 8, C_CIRCUIT);
-        // Right border
+
         tft.drawPixel(x + w - 2, yy, C_CIRCUIT);
         tft.drawPixel(x + w - 2, yy + 4, C_CIRCUIT);
         tft.drawPixel(x + w - 6, yy + 4, C_CIRCUIT);
@@ -78,32 +71,28 @@ static void drawCircuitPattern(int x, int y, int w, int h) {
     }
 }
 
-// ── Draw top status bar ──
 static void drawTopBar() {
-    // Status bar background
+
     tft.fillRect(0, 0, SCREEN_W, 32, C_SLATE);
 
-    // ── Left: "STASIS GAMING" then Battery ──
     tft.setTextSize(1);
     tft.setTextColor(TFT_WHITE, C_SLATE);
     tft.setCursor(8, 11);
     tft.print("STASIS GAMING");
-    // Battery icon after text with gap
+
     tft.drawRect(100, 9, 22, 12, C_BATTERY_BLUE);
     tft.drawRect(122, 12, 3, 6, C_BATTERY_BLUE);
-    tft.fillRect(102, 11, 5, 8, C_BATTERY_BLUE);  // 25%
-    // "25%"
+    tft.fillRect(102, 11, 5, 8, C_BATTERY_BLUE);
+
     tft.setTextColor(C_BATTERY_BLUE, C_SLATE);
     tft.setCursor(128, 11);
     tft.print("25%");
 
-    // ── Center: Time in white ──
     tft.setTextColor(TFT_WHITE, C_SLATE);
     int timeX = (SCREEN_W - tft.textWidth("07:30 PM")) / 2;
     tft.setCursor(timeX, 11);
     tft.print("07:30 PM");
 
-    // ── Right: WiFi connected in blue ──
     int wifiX = SCREEN_W - 100;
     tft.drawCircle(wifiX + 5, 15, 6, C_WIFI_BLUE);
     tft.drawCircle(wifiX + 5, 15, 3, C_WIFI_BLUE);
@@ -115,21 +104,17 @@ static void drawTopBar() {
     tft.print("(CONNECTED)");
 }
 
-// ── Draw bottom nav bar ──
 static void drawBottomBar(int activeIndex) {
     tft.fillRect(0, SCREEN_H - 32, SCREEN_W, 32, C_SLATE);
 
-    // Back button
     bool backActive = false;
     bool settingsActive = (activeIndex == MENU_SETTINGS);
     bool profileActive  = (activeIndex == MENU_PROFILE);
 
-    // Back / Settings / Profile — all on one line: "< Back"  "* Settings"  ") Profile"
     int navY = SCREEN_H - 22;
     int spacing = SCREEN_W / 3;
 
-    // ── Back ──
-    if (activeIndex == -99) backActive = false; // never active
+    if (activeIndex == -99) backActive = false;
     tft.setTextSize(2);
     tft.setTextColor(TFT_WHITE, C_SLATE);
     tft.setCursor(spacing/2 - 20, navY);
@@ -138,7 +123,6 @@ static void drawBottomBar(int activeIndex) {
     tft.setCursor(spacing/2 - 4, navY + 4);
     tft.print("Back");
 
-    // ── Settings ──
     if (settingsActive) {
         tft.fillRoundRect(spacing - 30, SCREEN_H - 28, spacing + 60, 24, 6, C_DARK_NAVY);
         tft.setTextColor(C_NEON_BLUE, C_DARK_NAVY);
@@ -152,7 +136,6 @@ static void drawBottomBar(int activeIndex) {
     tft.setCursor(spacing + spacing/2 - 12, navY + 4);
     tft.print("Settings");
 
-    // ── Profile ──
     if (profileActive) {
         tft.fillRoundRect(spacing * 2 - 30, SCREEN_H - 28, spacing + 60, 24, 6, C_DARK_NAVY);
         tft.setTextColor(C_NEON_BLUE, C_DARK_NAVY);
@@ -167,22 +150,20 @@ static void drawBottomBar(int activeIndex) {
     tft.print("Profile");
 }
 
-// ── Draw glowing cyberpunk frame ──
 static void drawFrame() {
-    // Left glowing border
+
     for (int i = 0; i < 3; i++) {
         tft.drawFastVLine(4 + i, 32, SCREEN_H - 64, C_BLUE_GLOW);
     }
-    // Right glowing border
+
     for (int i = 0; i < 3; i++) {
         tft.drawFastVLine(SCREEN_W - 4 - i, 32, SCREEN_H - 64, C_BLUE_GLOW);
     }
-    // Circuit patterns
+
     drawCircuitPattern(4, 36, 8, SCREEN_H - 72);
     drawCircuitPattern(SCREEN_W - 12, 36, 8, SCREEN_H - 72);
 }
 
-// ── Draw HOME pill title ──
 static void drawPageTitle() {
     int tw = 90;
     int tx = (SCREEN_W - tw) / 2;
@@ -193,13 +174,11 @@ static void drawPageTitle() {
     tft.print("HOME");
 }
 
-// ── Draw a grid cell (game button) ──
 static void drawCell(int index, bool isSelected) {
     bool isExtra = (index >= GAME_COUNT);
     int extraIdx = index - GAME_COUNT;
     int gridIdx  = index;
 
-    // If it's an extra item (Settings/Profile), don't draw in grid
     if (isExtra) return;
 
     int row = gridIdx / GRID_COLS;
@@ -210,11 +189,10 @@ static void drawCell(int index, bool isSelected) {
 
     const GameEntry& g = _games[gridIdx];
 
-    uint16_t bgColor = C_SLATE;  // match top/bottom bars
+    uint16_t bgColor = C_SLATE;
     uint16_t borderColor = isSelected ? C_NEON_CYAN : 0x2124;
-    uint16_t textColor = TFT_WHITE;  // always white, no color change on select
+    uint16_t textColor = TFT_WHITE;
 
-    // Outer glow when selected — erase when not
     if (isSelected) {
         tft.drawRoundRect(cx - 2, cy - 2, CELL_W + 4, CELL_H + 4, 10, C_NEON_CYAN);
         tft.drawRoundRect(cx - 1, cy - 1, CELL_W + 2, CELL_H + 2, 9, C_NEON_BLUE);
@@ -222,36 +200,30 @@ static void drawCell(int index, bool isSelected) {
         tft.fillRoundRect(cx - 2, cy - 2, CELL_W + 4, CELL_H + 4, 10, C_DARK_NAVY);
     }
 
-    // Cell background
     tft.fillRoundRect(cx, cy, CELL_W, CELL_H, 8, bgColor);
     tft.drawRoundRect(cx, cy, CELL_W, CELL_H, 8, borderColor);
 
-    // Screenshot icon area (top half) — gray bg like HOME pill
     int iconSize = 32;
     int iconX = cx + (CELL_W - iconSize) / 2;
     int iconY = cy + 6;
     tft.fillRoundRect(iconX, iconY, iconSize, iconSize, 5, C_SLATE);
 
-    // Draw screenshot icon using TFT_eSPI pushImage
     const IconInfo& info = gameIcons[g.iconIdx];
     int imgX = iconX + (iconSize - info.w) / 2;
     int imgY = iconY + (iconSize - info.h) / 2;
-    tft.pushImage(imgX, imgY, info.w, info.h, (uint16_t*)info.data, 0x0001); // transparent=0x0001
+    tft.pushImage(imgX, imgY, info.w, info.h, (uint16_t*)info.data, 0x0001);
 
-    // Game name below icon
     tft.setTextSize(1);
     tft.setTextColor(textColor, bgColor);
     tft.setCursor(cx + (CELL_W - tft.textWidth(g.name)) / 2, cy + 42);
     tft.print(g.name);
 
-    // Description
     tft.setTextSize(1);
-    tft.setTextColor(0x2124, bgColor);  // dark gray, visible on slate bg
+    tft.setTextColor(0x2124, bgColor);
     tft.setCursor(cx + (CELL_W - tft.textWidth(g.desc)) / 2, cy + 54);
     tft.print(g.desc);
 }
 
-// ── Draw Settings/Profile cards (single card view) ──
 static void drawExtraCard(int index) {
     int extraIdx = index - GAME_COUNT;
     const char* name = _extraNames[extraIdx];
@@ -263,10 +235,8 @@ static void drawExtraCard(int index) {
     int cw = SCREEN_W - 160;
     int ch = 140;
 
-    // Glow
     tft.drawRoundRect(cx - 2, cy - 2, cw + 4, ch + 4, 12, C_NEON_CYAN);
 
-    // Card
     tft.fillRoundRect(cx, cy, cw, ch, 10, color);
     tft.drawRoundRect(cx, cy, cw, ch, 10, TFT_WHITE);
 
@@ -282,7 +252,6 @@ static void drawExtraCard(int index) {
     tft.setCursor((SCREEN_W - dw) / 2, cy + 75);
     tft.print(desc);
 
-    // Arrows
     tft.setTextColor(TFT_BLACK, C_DARK_NAVY);
     tft.setTextSize(3);
     if (index > GAME_COUNT) {
@@ -295,32 +264,25 @@ static void drawExtraCard(int index) {
     }
 }
 
-// ── Main background ──
 static void drawBackground() {
     tft.fillScreen(C_DARK_NAVY);
 
-    // Top bar
     drawTopBar();
 
-    // Bottom bar
     drawBottomBar(-1);
 
-    // Cyberpunk frame
     drawFrame();
 
-    // Page title
     drawPageTitle();
 }
 
 static void redraw() {
     drawBackground();
 
-    // Draw grid cells
     for (int i = 0; i < GAME_COUNT; i++) {
         drawCell(i, i == _selected);
     }
 
-    // If selected is extra (Settings/Profile), draw card
     if (_selected >= GAME_COUNT) {
         drawExtraCard(_selected);
     }
@@ -340,12 +302,11 @@ int run() {
 
         bool moved = false;
 
-        // Arrow key navigation
         if (Input::pressed(Input::LEFT)) {
             if (_selected > 0) {
-                // If at the edge of grid, wrap
+
                 if (_selected < GAME_COUNT && _selected % GRID_COLS == 0) {
-                    // Move to previous row's rightmost
+
                     if (_selected >= GRID_COLS) _selected -= GRID_COLS;
                 } else {
                     _selected--;
@@ -356,7 +317,7 @@ int run() {
         if (Input::pressed(Input::RIGHT)) {
             if (_selected < MENU_COUNT - 1) {
                 if (_selected < GAME_COUNT && _selected % GRID_COLS == GRID_COLS - 1) {
-                    // Move to next row's leftmost
+
                     _selected += GRID_COLS;
                     if (_selected >= GAME_COUNT) _selected = GAME_COUNT - 1;
                 } else {
@@ -387,17 +348,16 @@ int run() {
             }
         }
 
-        // Erase previous glow if moved
         if (moved) {
             Sounds::sfxClick();
-            // Redraw only the affected cells
+
             if (_prevSelected >= 0 && _prevSelected < GAME_COUNT) {
                 drawCell(_prevSelected, false);
             }
             if (_selected >= 0 && _selected < GAME_COUNT) {
                 drawCell(_selected, true);
             }
-            // If switching from game to extra or vice versa, redraw everything
+
             if ((_prevSelected < GAME_COUNT) != (_selected < GAME_COUNT)) {
                 drawBackground();
                 for (int i = 0; i < GAME_COUNT; i++) {
@@ -405,12 +365,11 @@ int run() {
                 }
                 if (_selected >= GAME_COUNT) drawExtraCard(_selected);
             }
-            // If both are extras, redraw card
+
             if (_prevSelected >= GAME_COUNT && _selected >= GAME_COUNT) {
                 drawExtraCard(_selected);
             }
 
-            // Update bottom bar highlight
             drawBottomBar(_selected);
 
             _prevSelected = _selected;
@@ -422,13 +381,13 @@ int run() {
             if (_selected < GAME_COUNT)
                 return _games[_selected].id;
             else if (_selected == MENU_SETTINGS)
-                return -2;  // Settings
+                return -2;
             else
-                return -3;  // Profile
+                return -3;
         }
 
         delay(16);
     }
 }
 
-} // namespace Menu
+}

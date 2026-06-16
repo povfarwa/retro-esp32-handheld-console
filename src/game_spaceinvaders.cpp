@@ -6,23 +6,19 @@
 
 namespace SpaceInvaders {
 
-// ── Layout ────────────────────────────────────
 static const int HUD_H       = 30;
 static const int PLAY_TOP    = HUD_H;
 
-// ── Player ────────────────────────────────────
 static const int PLR_W       = 24;
 static const int PLR_H       = 14;
 static const int PLR_Y       = SCREEN_H - PLR_H - 6;
 static const int PLR_SPEED   = 5;
 
-// ── Bullet ────────────────────────────────────
 static const int BUL_W       = 3;
 static const int BUL_H       = 10;
 static const int BUL_SPEED   = 8;
 static const int BUL_COOLDOWN= 300;
 
-// ── Aliens ────────────────────────────────────
 static const int AL_COLS     = 10;
 static const int AL_ROWS     = 4;
 static const int AL_W        = 28;
@@ -32,13 +28,11 @@ static const int AL_GAP_Y    = 10;
 static const int AL_OFFX     = 10;
 static const int AL_OFFY     = PLAY_TOP + 10;
 
-// ── Alien bullets ────────────────────────────
 static const int MAX_ABUL    = 3;
 static const int ABUL_SPEED  = 4;
 static const int ABUL_W      = 3;
 static const int ABUL_H      = 8;
 
-// ── State ────────────────────────────────────
 static int   plrX;
 static float bulX, bulY;
 static bool  bulActive;
@@ -165,8 +159,6 @@ static void initGame() {
     initLevel();
 }
 
-// ── Main game loop ────────────────────────────
-
 void run() {
     tft.fillScreen(TFT_BLACK);
     Display::drawPanel(60, 80, SCREEN_W - 120, 160, TFT_NAVY, TFT_GREEN, 12);
@@ -184,13 +176,11 @@ void run() {
     while (true) {
         Input::update();
 
-        // ── Exit to menu with BOTTOM (B button) ──
         if (Input::pressed(Input::BOTTOM)) {
             Sounds::sfxBack();
             return;
         }
 
-        // ── Move player ──────────────────────
         Input::Axis ax = Input::axis();
         int spd = 0;
         if (ax.x < -15 || Input::held(Input::LEFT))  spd = -PLR_SPEED;
@@ -202,7 +192,6 @@ void run() {
             oldPlrX = plrX;
         }
 
-        // ── Player shoot ─────────────────────
         unsigned long now = millis();
         Input::Axis ax2 = Input::axis();
         bool topPressed = Input::pressed(Input::TOP) || ax2.y < -15;
@@ -214,7 +203,6 @@ void run() {
             Sounds::sfxShoot();
         }
 
-        // ── Move player bullet ───────────────
         if (bulActive) {
             tft.fillRect((int)bulX, (int)bulY, BUL_W, BUL_H, TFT_BLACK);
             bulY -= BUL_SPEED;
@@ -255,7 +243,6 @@ void run() {
             }
         }
 
-        // ── Move aliens ──────────────────────
         now = millis();
         if (now - lastAlienMove >= (unsigned long)alienMoveInterval) {
             lastAlienMove = now;
@@ -297,9 +284,8 @@ void run() {
             drawAllAliens();
         }
 
-        // ── Check if aliens reached player line ──
         if (lives <= 0) {
-            // ── Game Over with Play Again / Back ──
+
             int choice = 0;
             showOverlay("GAME OVER", "", TFT_RED);
             while (true) {
@@ -330,7 +316,6 @@ void run() {
             }
         }
 
-        // ── Alien shoot ──────────────────────
         if (random(0, 100) < 3) {
             int col = random(0, AL_COLS);
             for (int r = AL_ROWS - 1; r >= 0; r--) {
@@ -348,7 +333,6 @@ void run() {
             }
         }
 
-        // ── Move alien bullets ───────────────
         for (int i = 0; i < MAX_ABUL; i++) {
             if (!abul[i].active) continue;
             tft.fillRect((int)abul[i].x, (int)abul[i].y, ABUL_W, ABUL_H, TFT_BLACK);
@@ -380,4 +364,4 @@ void run() {
     }
 }
 
-} // namespace SpaceInvaders
+}

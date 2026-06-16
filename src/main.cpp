@@ -7,22 +7,21 @@
 #include "settings.h"
 #include "profile.h"
 
-// Games
 #include "SnakeGame.h"
 #include "game_spaceinvaders.h"
 #include "TetrisGame.h"
 #include "game_brickbreaker.h"
 #include "DinoRun.h"
-#include "SamuraiFight.h"
+#include "PacMan.h"
 
 void setup() {
     Serial.begin(115200);
 
-    Input::init();         // buttons + joystick
+    Input::init();
     Sounds::init(PIN_BUZZER);
-    Display::init();       // TFT_eSPI display
-    Settings::init();      // load NVS
-    Profile::init();       // load NVS
+    Display::init();
+    Settings::init();
+    Profile::init();
     Menu::init();
 
     Sounds::jingleStartup();
@@ -34,7 +33,7 @@ void loop() {
     switch (game) {
         case GAME_SNAKE:         SnakeGame::run();         break;
         case GAME_SPACEINVADERS: SpaceInvaders::run();     break;
-        case GAME_PACMAN:        SamuraiFight::run();       break;
+        case GAME_PACMAN:        PacMan::run();             break;
         case GAME_BRICKBREAKER:  BrickBreaker::run();      break;
         case GAME_DINORUN:       DinoRun::run();           break;
         case GAME_TETRIS:        Tetris::run();            break;
@@ -43,6 +42,5 @@ void loop() {
         default:                                           break;
     }
 
-    // Redraw menu after returning from game/settings/profile
     Menu::init();
 }

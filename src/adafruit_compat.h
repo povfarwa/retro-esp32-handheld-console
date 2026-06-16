@@ -12,7 +12,6 @@ static inline int textWidth(const String& s, int sz) {
     return s.length() * FONT_W * sz;
 }
 
-
 static inline void drawCentreString(const char* s, int cx, int cy, int sz) {
     tft.setCursor(cx - strlen(s) * (FONT_W * sz / 2), cy - (FONT_H * sz / 2));
     tft.print(s);
@@ -60,7 +59,7 @@ static inline void drawStringBC(const String& s, int cx, int y_bot, int sz) {
 
 static inline void drawFilledArc(int cx, int cy, int r_outer, int r_inner,
                                   int start_deg, int end_deg, uint16_t color) {
-    // Normalize angles
+
     if (start_deg > end_deg) end_deg += 360;
     for (int d = start_deg; d <= end_deg; d++) {
         float rad = d * 0.01745329252f;

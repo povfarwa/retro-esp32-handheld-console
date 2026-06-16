@@ -70,7 +70,6 @@ static void resetGame() {
 static void play() {
     if (!gameStarted) { resetGame(); return; }
 
-    // Input handling
     Input::Axis ax = Input::axis();
     if (ax.x > 40 && dirX == 0)        { nextDirX = 1; nextDirY = 0; }
     else if (ax.x < -40 && dirX == 0)  { nextDirX = -1; nextDirY = 0; }
@@ -90,17 +89,14 @@ static void play() {
 
     Point newHead = {snake[0].x + dirX * DOT_SIZE, snake[0].y + dirY * DOT_SIZE};
 
-    // Wrap around edges
     if (newHead.x < 0) newHead.x = 480 - DOT_SIZE;
     else if (newHead.x >= 480) newHead.x = 0;
     if (newHead.y < 0) newHead.y = 320 - DOT_SIZE;
     else if (newHead.y >= 320) newHead.y = 0;
 
-    // Draw new head
     snake.insert(snake.begin(), newHead);
     tft.fillRect(newHead.x + 1, newHead.y + 1, DOT_SIZE - 2, DOT_SIZE - 2, TFT_GREEN);
 
-    // Check food
     if (newHead.x == food.x && newHead.y == food.y) {
         score++;
         Sounds::sfxShoot();
@@ -108,13 +104,12 @@ static void play() {
         spawnFood();
         tft.fillRect(food.x + 1, food.y + 1, DOT_SIZE - 2, DOT_SIZE - 2, TFT_RED);
     } else {
-        // Remove tail
+
         Point tail = snake.back();
         tft.fillRect(tail.x, tail.y, DOT_SIZE, DOT_SIZE, TFT_BLACK);
         snake.pop_back();
     }
 
-    // Self-collision check after tail removal
     for (size_t i = 1; i < snake.size(); i++) {
         if (newHead.x == snake[i].x && newHead.y == snake[i].y) {
             isGameOver = true;
@@ -125,7 +120,6 @@ static void play() {
         }
     }
 
-    // Update score display
     tft.fillRect(0, 0, 160, 20, TFT_BLACK);
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
     tft.setTextSize(1);
@@ -134,11 +128,10 @@ static void play() {
     tft.print(score);
 }
 
-// ── Game Over Overlay with Play Again / Back ──
-static int gameOverChoice = 0; // 0 = Play Again, 1 = Back to Menu
+static int gameOverChoice = 0;
 
 static void drawOverlay() {
-    // Semi-transparent dark panel
+
     tft.fillRect(0, 0, SCREEN_W, SCREEN_H, TFT_BLACK);
     tft.drawRect(0, 0, SCREEN_W, SCREEN_H, TFT_RED);
 
@@ -153,7 +146,6 @@ static void drawOverlay() {
     tft.print("Score: ");
     tft.print(score);
 
-    // Two options
     int y1 = 185, y2 = 225;
     uint16_t colA = (gameOverChoice == 0) ? TFT_GREEN : TFT_DARKGREY;
     uint16_t colB = (gameOverChoice == 1) ? TFT_GREEN : TFT_DARKGREY;
@@ -180,7 +172,6 @@ void run() {
     gameOverChoice = 0;
     tft.fillScreen(TFT_BLACK);
 
-    // Title screen
     Display::drawPanel(60, 80, SCREEN_W - 120, 160, TFT_DARKGREEN, TFT_GREEN, 12);
     Display::drawCentredText("SNAKE", 100, 3, TFT_GREEN);
     Display::drawCentredText("Eat food, grow long!", 140, 2, TFT_WHITE);
@@ -201,14 +192,14 @@ void run() {
         Input::update();
 
         if (!isGameOver) {
-            // Check for exit to menu during gameplay
+
             if (Input::pressed(Input::TOP)) {
                 Sounds::sfxBack();
                 return;
             }
             play();
         } else {
-            // ── Game Over Overlay ──
+
             drawOverlay();
 
             bool chosen = false;
@@ -227,7 +218,6 @@ void run() {
                     chosen = true;
                 }
 
-                // Quick exit with TOP
                 if (Input::pressed(Input::TOP)) {
                     delay(150);
                     return;
@@ -237,10 +227,10 @@ void run() {
             }
 
             if (gameOverChoice == 0) {
-                // Play Again
+
                 resetGame();
             } else {
-                // Back to Menu
+
                 return;
             }
         }
@@ -249,6 +239,6 @@ void run() {
     }
 }
 
-} // namespace SnakeGame
+}
 
 #endif

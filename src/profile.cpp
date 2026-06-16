@@ -8,9 +8,8 @@
 
 namespace Profile {
 
-// ── STASIS GAMING Theme Colors ──
-static const uint16_t C_DARK_NAVY   = 0x0000;  // pure black
-static const uint16_t C_SLATE       = 0x8C71;  // medium gray for bars
+static const uint16_t C_DARK_NAVY   = 0x0000;
+static const uint16_t C_SLATE       = 0x8C71;
 static const uint16_t C_NEON_BLUE   = 0x07FF;
 static const uint16_t C_NEON_CYAN   = 0x06FF;
 static const uint16_t C_PILL_GRAY   = 0x8C71;
@@ -18,7 +17,7 @@ static const uint16_t C_BLUE_GLOW   = 0x001F;
 static const uint16_t C_CIRCUIT     = 0x00AA;
 
 static const char* gameNames[GAME_COUNT] = {
-    "Snake", "Space Shooter", "Samurai Fight",
+    "Snake", "Space Shooter", "Pac-Man",
     "Maze Runner", "Dino Run", "Tetris"
 };
 
@@ -60,20 +59,18 @@ static void drawTopBar() {
     tft.setTextColor(TFT_WHITE, C_SLATE);
     tft.setCursor(8, 11);
     tft.print("STASIS GAMING");
-    // Battery after text
+
     tft.drawRect(100, 9, 22, 12, TFT_BLACK);
     tft.drawRect(122, 12, 3, 6, TFT_BLACK);
     tft.fillRect(102, 11, 5, 8, C_NEON_BLUE);
     tft.setCursor(128, 11);
     tft.print("25%");
 
-    // Center: Time
     tft.setTextColor(TFT_WHITE, C_SLATE);
     int timeX = (SCREEN_W - tft.textWidth("07:30 PM")) / 2;
     tft.setCursor(timeX, 11);
     tft.print("07:30 PM");
 
-    // Right: WiFi
     int wifiX = SCREEN_W - 100;
     tft.drawCircle(wifiX + 5, 15, 6, C_NEON_BLUE);
     tft.drawCircle(wifiX + 5, 15, 3, C_NEON_BLUE);
@@ -91,7 +88,6 @@ static void drawBottomBar() {
     int spacing = SCREEN_W / 3;
     int navY = SCREEN_H - 22;
 
-    // Back
     tft.setTextSize(2);
     tft.setTextColor(TFT_WHITE, C_SLATE);
     tft.setCursor(spacing/2 - 20, navY);
@@ -100,7 +96,6 @@ static void drawBottomBar() {
     tft.setCursor(spacing/2 - 4, navY + 4);
     tft.print("Back");
 
-    // Settings
     tft.setTextColor(TFT_WHITE, C_SLATE);
     tft.setTextSize(2);
     tft.setCursor(spacing + spacing/2 - 28, navY);
@@ -109,7 +104,6 @@ static void drawBottomBar() {
     tft.setCursor(spacing + spacing/2 - 12, navY + 4);
     tft.print("Settings");
 
-    // Profile highlight (active)
     tft.fillRoundRect(spacing * 2 - 30, SCREEN_H - 28, spacing + 60, 24, 6, C_DARK_NAVY);
     tft.setTextColor(C_NEON_BLUE, C_DARK_NAVY);
     tft.setTextSize(2);
@@ -146,18 +140,15 @@ static void drawScreen() {
     drawFrame();
     drawPageTitle();
 
-    // ── Central Profile Card ──
     int cardX = 30;
     int cardY = 64;
     int cardW = SCREEN_W - 60;
     int cardH = 180;
 
-    // Card outline with neon blue border
     tft.drawRoundRect(cardX - 2, cardY - 2, cardW + 4, cardH + 4, 12, C_NEON_CYAN);
     tft.fillRoundRect(cardX, cardY, cardW, cardH, 10, 0x2124);
     tft.drawRoundRect(cardX, cardY, cardW, cardH, 10, C_NEON_BLUE);
 
-    // ── NAME field ──
     int labelX = cardX + 20;
     int valueX = cardX + 120;
     int row1 = cardY + 25;
@@ -167,7 +158,6 @@ static void drawScreen() {
     tft.setCursor(labelX, row1);
     tft.print("NAME");
 
-    // Value field
     int fw = cardW - 150;
     tft.fillRoundRect(valueX, row1 - 2, fw, 26, 6, C_DARK_NAVY);
     tft.drawRoundRect(valueX, row1 - 2, fw, 26, 6, C_NEON_BLUE);
@@ -176,7 +166,6 @@ static void drawScreen() {
     tft.setCursor(valueX + 10, row1 + 3);
     tft.print("FARWA ZAFAR");
 
-    // ── AGE field ──
     int row2 = row1 + 50;
 
     tft.setTextSize(2);
@@ -193,7 +182,7 @@ static void drawScreen() {
 }
 
 void run() {
-    // Immediately clear any leftover color from menu
+
     tft.fillScreen(C_DARK_NAVY);
     drawScreen();
 
@@ -209,4 +198,4 @@ void run() {
     }
 }
 
-} // namespace Profile
+}

@@ -61,7 +61,6 @@ static void play() {
     if (!gameStarted) { reset(); return; }
     frameCount++;
 
-    // --- Input ---
     Input::Axis ax = Input::axis();
     if ((ax.y < -40 || Input::pressed(Input::RIGHT) || Input::pressed(Input::SW)) && !isJumping) {
         velocity = JUMP_FORCE;
@@ -69,14 +68,12 @@ static void play() {
         Sounds::sfxShoot();
     }
 
-    // --- Physics ---
-    // Erase dino at its OLD position, then redraw ground if needed
     int oldY = dinoY;
-    tft.fillRect(DINO_X - 8, oldY - 12, 30, 44, TFT_WHITE);
-    // Restore ground line if the erase area covered it
+    tft.fillRect(DINO_X - 8, oldY - 12, 40, 44, TFT_WHITE);
+
     if (oldY + 32 >= groundY) {
         tft.drawLine(0, groundY, 480, groundY, TFT_BLACK);
-        tft.fillRect(DINO_X - 8, groundY + 1, 30, 30, TFT_WHITE);
+        tft.fillRect(DINO_X - 8, groundY + 1, 40, 30, TFT_WHITE);
     }
 
     velocity += GRAVITY;
@@ -88,27 +85,23 @@ static void play() {
         isJumping = false;
     }
 
-    // --- Spawn obstacles ---
     if (millis() - lastSpawn > (unsigned long)random(800, 2000)) {
         obstacles.push_back({480, true});
         lastSpawn = millis();
     }
 
-    // --- Move obstacles & check collision ---
     for (auto& o : obstacles) {
         if (!o.active) continue;
-        // Erase full cactus extent (covers arms at o.x-4 and top at groundY-36)
+
         tft.fillRect(o.x - 5, groundY - 38, 24, 38, TFT_WHITE);
         o.x -= speed;
         if (o.x < -20) { o.active = false; continue; }
 
-        // Draw cactus
         tft.fillRect(o.x, groundY - 30, 12, 30, TFT_GREEN);
         tft.fillRect(o.x + 3, groundY - 36, 6, 10, TFT_GREEN);
         tft.fillRect(o.x - 4, groundY - 22, 6, 12, TFT_GREEN);
         tft.fillRect(o.x + 10, groundY - 18, 6, 8, TFT_GREEN);
 
-        // Collision check
         if (o.x - 4 < DINO_X + 18 && o.x + 16 > DINO_X &&
             dinoY + 25 > groundY - 36 && dinoY < groundY) {
             isGameOver = true;
@@ -120,11 +113,10 @@ static void play() {
         }
     }
 
-    // --- Draw dino ---
     tft.fillRect(DINO_X, dinoY, 18, 25, BROWN);
     tft.fillRect(DINO_X + 14, dinoY - 8, 14, 14, BROWN);
     tft.fillCircle(DINO_X + 22, dinoY - 4, 3, TFT_BLACK);
-    // Legs (animated)
+
     if ((frameCount / 8) % 2 == 0) {
         tft.fillRect(DINO_X + 2, dinoY + 22, 5, 5, BROWN);
         tft.fillRect(DINO_X + 11, dinoY + 22, 5, 5, BROWN);
@@ -134,7 +126,6 @@ static void play() {
     }
     tft.fillRect(DINO_X - 6, dinoY + 4, 6, 6, BROWN);
 
-    // --- Score ---
     if (millis() - lastScoreTime > 300) {
         score++;
         lastScoreTime = millis();
@@ -144,17 +135,14 @@ static void play() {
         tft.print("Score: ");
         tft.print(score);
 
-        // Gradual speed increase
         if (score % 50 == 0) speed = min(14, speed + 1);
     }
 
-    // Cleanup
     obstacles.erase(std::remove_if(obstacles.begin(), obstacles.end(), [](Obstacle& o) { return !o.active; }), obstacles.end());
 
     delay(20);
 }
 
-// ── Game Over Overlay ──
 static int gameOverChoice = 0;
 
 static void drawOverlay() {
@@ -205,7 +193,6 @@ void run() {
     gameOverChoice = 0;
     tft.fillScreen(TFT_BLACK);
 
-    // Title screen
     Display::drawPanel(60, 70, SCREEN_W - 120, 180, TFT_MAROON, TFT_GREEN, 12);
     Display::drawCentredText("DINO RUN", 90, 3, TFT_GREEN);
     Display::drawCentredText("Jump over cacti!", 135, 2, TFT_WHITE);
@@ -269,6 +256,6 @@ void run() {
     }
 }
 
-} // namespace DinoRun
+}
 
 #endif

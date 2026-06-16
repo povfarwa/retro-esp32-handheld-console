@@ -26,7 +26,6 @@ void init() {
     pinMode(PIN_JOY_X, INPUT);
     pinMode(PIN_JOY_Y, INPUT);
 
-    // Calibrate joystick centre
     delay(200);
     long sumX = 0, sumY = 0;
     for (int i = 0; i < 64; i++) {
@@ -44,7 +43,6 @@ void update() {
         _cur[i]  = (digitalRead(_pins[i]) == LOW);
     }
 
-    // Populate g_input for legacy game compatibility
     Axis a = axis();
     g_input.joyX    = a.x;
     g_input.joyY    = a.y;
@@ -94,4 +92,4 @@ void beepTone(int ms, int repeatCount) {
     }
 }
 
-} // namespace Input
+}

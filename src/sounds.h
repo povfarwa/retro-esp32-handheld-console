@@ -1,19 +1,13 @@
 #pragma once
 #include <Arduino.h>
 
-// ─────────────────────────────────────────────
-//  Sound module — active buzzer
-//  Just digitalWrite HIGH/LOW timing.
-// ─────────────────────────────────────────────
-
 namespace Sounds {
 
     void init(uint8_t pin);
 
-    void tone(uint32_t freq, int durationMs);  // freq ignored for active buzzer
+    void tone(uint32_t freq, int durationMs);
     void silence(int durationMs);
 
-    // Effects
     void sfxClick();
     void sfxSelect();
     void sfxBack();

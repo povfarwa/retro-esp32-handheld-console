@@ -11,58 +11,54 @@
 
 namespace Tetris {
 
-// ── Constants ──────────────────────────────────
 static const int COLS      = 10;
 static const int ROWS      = 20;
-static const int BSIZE     = 14;        // block size in pixels
-static const int GRID_W    = COLS * BSIZE;   // 140
-static const int GRID_H    = ROWS * BSIZE;   // 280
-static const int GRID_X    = (SCREEN_W - GRID_W) / 2;  // 170
+static const int BSIZE     = 14;
+static const int GRID_W    = COLS * BSIZE;
+static const int GRID_H    = ROWS * BSIZE;
+static const int GRID_X    = (SCREEN_W - GRID_W) / 2;
 static const int GRID_Y    = 20;
 
-static const int SIDE_X    = GRID_X + GRID_W + 8;   // right panel
+static const int SIDE_X    = GRID_X + GRID_W + 8;
 
-// ── Tetromino definitions ─────────────────────
-// 7 pieces × 4 rotations × 4×4 grid = each encoded as 4 bytes (rows)
-// Pieces: I, O, T, S, Z, J, L
 static const uint8_t PIECES[7][4][4] = {
-    { // I
+    {
         {0,15,0,0},
         {2,2,2,2},
         {0,0,15,0},
         {4,4,4,4},
     },
-    { // O
+    {
         {0,6,6,0},
         {0,6,6,0},
         {0,6,6,0},
         {0,6,6,0},
     },
-    { // T
+    {
         {0,4,14,0},
         {4,6,4,0},
         {0,14,4,0},
         {4,12,4,0},
     },
-    { // S
+    {
         {0,6,12,0},
         {4,6,2,0},
         {0,6,12,0},
         {4,6,2,0},
     },
-    { // Z
+    {
         {0,12,6,0},
         {2,6,4,0},
         {0,12,6,0},
         {2,6,4,0},
     },
-    { // J
+    {
         {0,8,14,0},
         {6,4,4,0},
         {0,14,2,0},
         {4,4,12,0},
     },
-    { // L
+    {
         {0,2,14,0},
         {4,4,6,0},
         {0,14,8,0},
@@ -71,37 +67,34 @@ static const uint8_t PIECES[7][4][4] = {
 };
 
 static const uint16_t PIECE_COLORS[7] = {
-    TFT_CYAN,   // I
-    TFT_YELLOW, // O
-    TFT_MAGENTA,// T
-    TFT_GREEN,  // S
-    TFT_RED,    // Z
-    TFT_BLUE,   // J
-    TFT_ORANGE  // L
+    TFT_CYAN,
+    TFT_YELLOW,
+    TFT_MAGENTA,
+    TFT_GREEN,
+    TFT_RED,
+    TFT_BLUE,
+    TFT_ORANGE
 };
 
-// ── State ──────────────────────────────────────
-static uint8_t grid[ROWS][COLS];   // 0 = empty, 1-7 = piece color index+1
-static int currentPiece;            // 0-6
-static int currentRot;              // 0-3
-static int px, py;                  // top-left of 4×4 bounding box on grid
+static uint8_t grid[ROWS][COLS];
+static int currentPiece;
+static int currentRot;
+static int px, py;
 static int nextPiece;
 static int score;
 static int level;
 static int lines;
 static bool isGameOver;
 static unsigned long lastFall;
-static int fallDelay;               // ms per drop
+static int fallDelay;
 static bool gameStarted;
 static int gameOverChoice;
-
-// ── Helpers ────────────────────────────────────
 
 static void drawBlock(int col, int row, uint16_t color) {
     int x = GRID_X + col * BSIZE;
     int y = GRID_Y + row * BSIZE;
     tft.fillRect(x + 1, y + 1, BSIZE - 2, BSIZE - 2, color);
-    // Slight 3D effect
+
     tft.drawRect(x, y, BSIZE, BSIZE, TFT_BLACK);
 }
 
@@ -171,7 +164,7 @@ static void clearLines() {
             if (grid[r][c] == 0) { full = false; break; }
         }
         if (full) {
-            // Shift everything down
+
             for (int r2 = r; r2 > 0; r2--) {
                 for (int c = 0; c < COLS; c++) {
                     grid[r2][c] = grid[r2 - 1][c];
@@ -179,7 +172,7 @@ static void clearLines() {
             }
             for (int c = 0; c < COLS; c++) grid[0][c] = 0;
             cleared++;
-            r++; // re-check same row
+            r++;
         }
     }
     if (cleared > 0) {
@@ -188,14 +181,14 @@ static void clearLines() {
         level = lines / 10 + 1;
         fallDelay = max(50, 500 - (level - 1) * 30);
         Sounds::sfxVictory();
-        // Redraw grid
+
         for (int r = 0; r < ROWS; r++) {
             for (int c = 0; c < COLS; c++) {
                 if (grid[r][c]) drawBlock(c, r, PIECE_COLORS[grid[r][c] - 1]);
                 else clearBlock(c, r);
             }
         }
-        // Update HUD
+
         tft.fillRect(SIDE_X, GRID_Y, SCREEN_W - SIDE_X - 4, 80, TFT_BLACK);
         tft.setTextSize(1);
         tft.setTextColor(TFT_WHITE, TFT_BLACK);
@@ -227,7 +220,6 @@ static void spawnNewPiece() {
         return;
     }
 
-    // Show next piece in side panel
     tft.fillRect(SIDE_X, GRID_Y + 90, SCREEN_W - SIDE_X - 4, 70, TFT_BLACK);
     tft.setTextSize(1);
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
@@ -247,7 +239,7 @@ static void spawnNewPiece() {
 }
 
 static void drawGrid() {
-    // Clear game area
+
     tft.fillRect(GRID_X - 2, GRID_Y - 2, GRID_W + 4, GRID_H + 4, TFT_NAVY);
     tft.drawRect(GRID_X - 2, GRID_Y - 2, GRID_W + 4, GRID_H + 4, TFT_WHITE);
     for (int r = 0; r < ROWS; r++)
@@ -255,7 +247,6 @@ static void drawGrid() {
             clearBlock(c, r);
 }
 
-// ── Overlay ────────────────────────────────────
 static void drawOverlay() {
     tft.fillRect(0, 0, SCREEN_W, SCREEN_H, TFT_BLACK);
     tft.drawRect(0, 0, SCREEN_W, SCREEN_H, TFT_RED);
@@ -293,7 +284,6 @@ static void drawOverlay() {
     tft.print("LEFT/RIGHT: select  SW: confirm");
 }
 
-// ── Lock + spawn helper (fixes "half disappear" bug) ──
 static void lockAndSpawn() {
     lockPiece();
     clearLines();
@@ -301,19 +291,18 @@ static void lockAndSpawn() {
     if (isGameOver) {
         Sounds::sfxGameOver();
     } else {
-        // Full grid redraw ensures the locked piece stays visible
+
         for (int r = 0; r < ROWS; r++) {
             for (int c = 0; c < COLS; c++) {
                 if (grid[r][c]) drawBlock(c, r, PIECE_COLORS[grid[r][c] - 1]);
                 else clearBlock(c, r);
             }
         }
-        // Draw the new piece at its starting position
+
         drawPiece(currentPiece, currentRot, px, py, false);
     }
 }
 
-// ── Main run ───────────────────────────────────
 void run() {
     gameStarted = false;
     isGameOver = false;
@@ -328,7 +317,6 @@ void run() {
 
     tft.fillScreen(TFT_BLACK);
 
-    // Title screen
     Display::drawPanel(60, 70, SCREEN_W - 120, 180, TFT_NAVY, TFT_CYAN, 12);
     Display::drawCentredText("TETRIS", 90, 3, TFT_CYAN);
     Display::drawCentredText("Clear lines!", 135, 2, TFT_WHITE);
@@ -347,12 +335,10 @@ void run() {
         delay(16);
     }
 
-    // Init game
     drawGrid();
     nextPiece = random(0, 7);
     spawnNewPiece();
 
-    // Draw side info
     tft.fillRect(SIDE_X, GRID_Y, SCREEN_W - SIDE_X - 4, 80, TFT_BLACK);
     tft.setTextSize(1);
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
@@ -374,18 +360,16 @@ void run() {
 
     lastFall = millis();
 
-    // ── Game loop ──
     while (true) {
         Input::update();
 
         if (!isGameOver) {
-            // Exit with BOTTOM
+
             if (Input::pressed(Input::BOTTOM)) {
                 Sounds::sfxBack();
                 return;
             }
 
-            // ── Input ──
             int oldPx = px;
             int oldPy = py;
             int oldRot = currentRot;
@@ -403,7 +387,7 @@ void run() {
                 if (pieceFits(currentPiece, newRot, px, py))
                     currentRot = newRot;
                 else {
-                    // Wall kick: try shifting left or right
+
                     if (pieceFits(currentPiece, newRot, px - 1, py))
                         { currentRot = newRot; px--; }
                     else if (pieceFits(currentPiece, newRot, px + 1, py))
@@ -411,14 +395,13 @@ void run() {
                 }
             }
 
-            // Hard drop with SW
             if (Input::pressed(Input::SW)) {
                 while (pieceFits(currentPiece, currentRot, px, py + 1))
                     py++;
                 lockAndSpawn();
                 lastFall = millis();
             } else {
-                // Soft drop with BOTTOM held
+
                 if (Input::held(Input::BOTTOM)) {
                     if (millis() - lastFall > 50) {
                         if (pieceFits(currentPiece, currentRot, px, py + 1)) {
@@ -432,7 +415,7 @@ void run() {
                         lastFall = millis();
                     }
                 } else {
-                    // Auto fall
+
                     if (millis() - lastFall > (unsigned long)fallDelay) {
                         if (pieceFits(currentPiece, currentRot, px, py + 1)) {
                             drawPiece(currentPiece, currentRot, px, py, true);
@@ -446,7 +429,6 @@ void run() {
                     }
                 }
 
-                // Redraw piece if position changed
                 if (px != oldPx || py != oldPy || currentRot != oldRot) {
                     drawPiece(currentPiece, oldRot, oldPx, oldPy, true);
                     drawPiece(currentPiece, currentRot, px, py, false);
@@ -454,7 +436,7 @@ void run() {
             }
 
         } else {
-            // ── Game Over Overlay ──
+
             drawOverlay();
 
             bool chosen = false;
@@ -481,7 +463,7 @@ void run() {
             }
 
             if (gameOverChoice == 0) {
-                // Reset game
+
                 isGameOver = false;
                 score = 0;
                 level = 1;
@@ -494,7 +476,7 @@ void run() {
                 drawGrid();
                 nextPiece = random(0, 7);
                 spawnNewPiece();
-                // Re-draw side info
+
                 tft.fillRect(SIDE_X, GRID_Y, SCREEN_W - SIDE_X - 4, 80, TFT_BLACK);
                 tft.setTextSize(1);
                 tft.setTextColor(TFT_WHITE, TFT_BLACK);
@@ -519,6 +501,6 @@ void run() {
     }
 }
 
-} // namespace Tetris
+}
 
 #endif

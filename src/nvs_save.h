@@ -4,24 +4,11 @@
 #include <Preferences.h>
 #include "globals.h"
 
-// ── NVS Save/Load ──────────────────────────────────────────────────
-// Persists AppState to ESP32 non-volatile storage so values survive
-// reset / power loss.  Uses the Preferences library (NVS namespace).
-//
-// Saved fields:
-//   playerName[16]  → key "name"       (String)
-//   brightness      → key "bright"     (uint8_t)
-//   soundOn         → key "sound"      (bool)
-//   highScores[6]   → keys "hs0"…"hs5" (uint32_t)
-//
-// Namespace:  "retro-console"
-// ───────────────────────────────────────────────────────────────────
-
 namespace NVS {
 
     static void save() {
         Preferences prefs;
-        prefs.begin("retro-console", false);   // false = read/write
+        prefs.begin("retro-console", false);
 
         prefs.putString("name",   g_app.playerName);
         prefs.putUChar("bright",  g_app.brightness);
@@ -38,7 +25,7 @@ namespace NVS {
 
     static void load() {
         Preferences prefs;
-        prefs.begin("retro-console", true);    // true = read-only
+        prefs.begin("retro-console", true);
 
         String name = prefs.getString("name", "Player");
         strlcpy(g_app.playerName, name.c_str(), sizeof(g_app.playerName));
@@ -55,6 +42,6 @@ namespace NVS {
         prefs.end();
     }
 
-}   // namespace NVS
+}
 
-#endif  // NVS_SAVE_H
+#endif

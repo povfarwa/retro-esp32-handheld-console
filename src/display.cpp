@@ -7,10 +7,9 @@ namespace Display {
 
 void init() {
     tft.init();
-    tft.setRotation(1);   // Landscape 480×320
+    tft.setRotation(1);
     tft.fillScreen(TFT_BLACK);
 
-    // Backlight on
     pinMode(PIN_BACKLIGHT, OUTPUT);
     digitalWrite(PIN_BACKLIGHT, HIGH);
 }
@@ -44,4 +43,4 @@ void drawBar(int x, int y, int w, int h,
     tft.fillRect(x, y, (int)(w * fraction), h, fillColor);
 }
 
-} // namespace Display
+}

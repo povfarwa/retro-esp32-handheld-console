@@ -6,23 +6,19 @@
 
 namespace BrickBreaker {
 
-// ── Layout ────────────────────────────────────
 static const int HUD_H      = 30;
 static const int PLAY_TOP   = HUD_H;
 static const int PLAY_W     = SCREEN_W;
 static const int PLAY_H     = SCREEN_H - HUD_H;
 
-// ── Paddle ────────────────────────────────────
 static const int PAD_W      = 90;
 static const int PAD_H      = 10;
 static const int PAD_Y      = SCREEN_H - 18;
 static const int PAD_SPEED  = 10;
 
-// ── Ball ──────────────────────────────────────
 static const int   BALL_R   = 7;
 static const float BALL_SPD = 4.0f;
 
-// ── Bricks ───────────────────────────────────
 static const int COLS       = 10;
 static const int ROWS       = 5;
 static const int BRICK_W    = 44;
@@ -35,13 +31,10 @@ static const uint16_t ROW_COLORS[ROWS] = {
     TFT_RED, TFT_ORANGE, TFT_YELLOW, TFT_GREEN, TFT_CYAN
 };
 
-// ── State ─────────────────────────────────────
 static float  ballX, ballY, ballDX, ballDY;
 static int    padX, oldPadX;
 static bool   bricks[ROWS][COLS];
 static int    score, lives;
-
-// ── Helpers ───────────────────────────────────
 
 static void drawHUD() {
     tft.fillRect(0, 0, SCREEN_W, HUD_H, TFT_NAVY);
@@ -123,8 +116,6 @@ static void waitForSW() {
     }
 }
 
-// ── Main game loop ────────────────────────────
-
 void run() {
     tft.fillScreen(TFT_BLACK);
     Display::drawPanel(60, 90, SCREEN_W - 120, 140, TFT_NAVY, TFT_CYAN, 12);
@@ -139,13 +130,11 @@ void run() {
     while (true) {
         Input::update();
 
-        // ── Exit to menu with BOTTOM (B button) ──
         if (Input::pressed(Input::BOTTOM)) {
             Sounds::sfxBack();
             return;
         }
 
-        // ── Paddle movement ──────────────────
         Input::Axis ax = Input::axis();
         int speed = 0;
         if      (ax.x < -15) speed = -PAD_SPEED;
@@ -160,17 +149,14 @@ void run() {
             oldPadX = padX;
         }
 
-        // ── Ball movement ────────────────────
         tft.fillCircle((int)ballX, (int)ballY, BALL_R, TFT_BLACK);
         ballX += ballDX;
         ballY += ballDY;
 
-        // Wall bounce
         if (ballX <= BALL_R)              { ballX = BALL_R;           ballDX = fabsf(ballDX); }
         if (ballX >= SCREEN_W - BALL_R)   { ballX = SCREEN_W - BALL_R; ballDX = -fabsf(ballDX); }
         if (ballY <= PLAY_TOP + BALL_R)   { ballY = PLAY_TOP + BALL_R; ballDY = fabsf(ballDY); }
 
-        // Paddle bounce
         if (ballDY > 0 &&
             ballY + BALL_R >= PAD_Y &&
             ballY + BALL_R <= PAD_Y + PAD_H + 4 &&
@@ -184,14 +170,13 @@ void run() {
             Sounds::sfxPaddleHit();
         }
 
-        // Ball lost
         if (ballY > SCREEN_H + BALL_R) {
             lives--;
             Sounds::sfxLifeLost();
             drawHUD();
 
             if (lives <= 0) {
-                // ── Game Over with Play Again / Back ──
+
                 showOverlay("GAME OVER", "", TFT_RED);
                 int choice = 0;
                 while (true) {
@@ -226,7 +211,6 @@ void run() {
             delay(400);
         }
 
-        // ── Brick collision ──────────────────
         for (int r = 0; r < ROWS; r++) {
             for (int c = 0; c < COLS; c++) {
                 if (!bricks[r][c]) continue;
@@ -287,4 +271,4 @@ void run() {
     }
 }
 
-} // namespace BrickBreaker
+}

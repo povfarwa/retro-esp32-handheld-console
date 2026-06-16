@@ -11,14 +11,12 @@
 
 namespace PacMan {
 
-// ── Constants ──────────────────────────────────
-static const int TILE       = 16;       // pixel size of one tile
+static const int TILE       = 16;
 static const int MAZE_COLS  = 21;
 static const int MAZE_ROWS  = 21;
-static const int MAZE_X     = (SCREEN_W - MAZE_COLS * TILE) / 2;  // centre
+static const int MAZE_X     = (SCREEN_W - MAZE_COLS * TILE) / 2;
 static const int MAZE_Y     = 10;
 
-// 0=empty, 1=wall, 2=dot, 3=power pellet, 4=ghost house, 5=ghost door
 static const uint8_t MAZE[MAZE_ROWS][MAZE_COLS] = {
     {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
     {1,2,2,2,2,2,2,2,2,2,1,2,2,2,2,2,2,2,2,2,1},
@@ -43,9 +41,8 @@ static const uint8_t MAZE[MAZE_ROWS][MAZE_COLS] = {
     {1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1},
 };
 
-// ── Game state ─────────────────────────────────
-static int pacX, pacY;           // tile position
-static int pacDir;               // 0=right,1=down,2=left,3=up
+static int pacX, pacY;
+static int pacDir;
 static int pacNextDir;
 static int animFrame;
 static int score;
@@ -59,7 +56,6 @@ static int gameOverChoice;
 static const int DX[4] = {1,0,-1,0};
 static const int DY[4] = {0,1,0,-1};
 
-// Ghosts
 struct Ghost {
     int x, y;
     int dir;
@@ -76,9 +72,8 @@ static const char* GHOST_NAMES[4] = {"BLINKY","PINKY","INKY","CLYDE"};
 
 static int frightenedTimer;
 static int level;
-static int pacTimer;  // movement timer
-
-// ── Drawing helpers ────────────────────────────
+static int pacTimer;
+static int ghostMoveCounter;
 
 static void drawTile(int col, int row, uint16_t color) {
     tft.fillRect(MAZE_X + col * TILE, MAZE_Y + row * TILE, TILE, TILE, color);
@@ -93,7 +88,7 @@ static void drawMaze() {
             int x = MAZE_X + c * TILE;
             int y = MAZE_Y + r * TILE;
             if (cell == 1) {
-                tft.fillRect(x, y, TILE, TILE, 0x3186);  // dark wall
+                tft.fillRect(x, y, TILE, TILE, 0x3186);
                 tft.drawRect(x, y, TILE, TILE, 0x2124);
             } else if (cell == 2) {
                 tft.fillRect(x, y, TILE, TILE, TFT_BLACK);
@@ -115,22 +110,21 @@ static void drawPacMan(int col, int row, int dir, int frame) {
     int cy = MAZE_Y + row * TILE + TILE/2;
     int r = TILE/2 - 1;
 
-    // Mouth angles
     float a1, a2;
     int mouthSize = (frame % 4 < 2) ? 30 : 8;
     switch (dir) {
-        case 0: a1 = mouthSize * 0.01745; a2 = 360 - a1; break; // right
-        case 1: a1 = 90 + mouthSize * 0.01745; a2 = 270 - a1; break; // down
-        case 2: a1 = 180 + mouthSize * 0.01745; a2 = 180 - a1; break; // left
-        case 3: a1 = 270 + mouthSize * 0.01745; a2 = 90 - a1; break; // up
+        case 0: a1 = mouthSize * 0.01745; a2 = 360 - a1; break;
+        case 1: a1 = 90 + mouthSize * 0.01745; a2 = 270 - a1; break;
+        case 2: a1 = 180 + mouthSize * 0.01745; a2 = 180 - a1; break;
+        case 3: a1 = 270 + mouthSize * 0.01745; a2 = 90 - a1; break;
         default: a1 = 0; a2 = 360;
     }
 
-    tft.fillCircle(cx, cy, r, TFT_BLACK); // erase old
+    tft.fillCircle(cx, cy, r, TFT_BLACK);
     tft.fillSmoothCircle(cx, cy, r, TFT_YELLOW, TFT_BLACK);
 
     if (mouthSize < 180) {
-        // Draw mouth by covering with black triangle
+
         for (int i = -r; i <= r; i++) {
             int halfW = sqrt(r*r - i*i);
             for (int j = 0; j < halfW; j++) {
@@ -175,33 +169,32 @@ static void drawGhost(const Ghost& g) {
     int cy = MAZE_Y + g.y * TILE + TILE/2 + 2;
     int r = TILE/2 - 1;
 
-    tft.fillRect(cx - r, cy - r, r*2, r*2, TFT_BLACK); // erase
+    tft.fillRect(cx - r, cy - r, r*2, r*2, TFT_BLACK);
 
     uint16_t color;
-    if (g.frightened) color = (frightenedTimer < 2000 && (frightenedTimer / 200) % 2 == 0) ? TFT_WHITE : 0x001F; // blue flash
-    else if (g.eaten) color = 0x0000; // invisible
+    if (g.frightened) color = (frightenedTimer < 2000 && (frightenedTimer / 200) % 2 == 0) ? TFT_WHITE : 0x001F;
+    else if (g.eaten) color = 0x0000;
     else color = g.color;
 
     if (g.eaten) return;
 
-    // Body
     tft.fillCircle(cx, cy - 2, r, color);
-    // Bottom
+
     tft.fillRect(cx - r, cy - 2, r*2, r, color);
-    // Wavy bottom
+
     int waveY = cy + r - 2;
     for (int i = 0; i < r*2; i += 4) {
         int w = (i / 4) % 2 == 0 ? 2 : 4;
         tft.fillRect(cx - r + i, waveY, 4, w, color);
     }
-    // Eyes
+
     if (!g.frightened) {
         tft.fillCircle(cx - 3, cy - 4, 3, TFT_WHITE);
         tft.fillCircle(cx + 3, cy - 4, 3, TFT_WHITE);
         tft.fillCircle(cx - 2, cy - 4, 1, (g.dir == 0) ? 0x0000 : 0x001F);
         tft.fillCircle(cx + 4, cy - 4, 1, (g.dir == 0) ? 0x001F : 0x0000);
     } else {
-        // Scared face
+
         tft.drawLine(cx - 4, cy, cx - 1, cy + 2, TFT_RED);
         tft.drawLine(cx + 4, cy, cx + 1, cy + 2, TFT_RED);
         tft.drawLine(cx - 4, cy + 1, cx - 1, cy + 3, TFT_RED);
@@ -215,25 +208,22 @@ static void eraseGhost(const Ghost& g) {
     tft.fillRect(x, y, TILE, TILE, TFT_BLACK);
 }
 
-// ── Maze helpers ───────────────────────────────
 static bool isWalkable(int col, int row) {
     if (col < 0 || col >= MAZE_COLS || row < 0 || row >= MAZE_ROWS) return false;
     uint8_t cell = MAZE[row][col];
     return cell != 1 && cell != 5;
 }
 
-// ── Game logic ─────────────────────────────────
 static void initLevel() {
-    // Clear maze
+
     drawMaze();
 
-    // Reset Pac-Man
     pacX = 10; pacY = 15;
     pacDir = 0; pacNextDir = 0;
     animFrame = 0;
     pacTimer = 0;
+    ghostMoveCounter = 0;
 
-    // Init ghosts
     for (int i = 0; i < 4; i++) {
         ghosts[i].x = 9 + (i % 2) * 2;
         ghosts[i].y = 9 + (i / 2);
@@ -261,7 +251,6 @@ static void reset() {
     tft.fillScreen(TFT_BLACK);
     initLevel();
 
-    // Draw HUD
     tft.setTextSize(1);
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
     tft.setCursor(MAZE_X, MAZE_Y + MAZE_ROWS * TILE + 4);
@@ -275,18 +264,17 @@ static void reset() {
     }
 }
 
-// Simple ghost AI - chase mode vs scatter
 static void moveGhost(Ghost& g) {
     if (g.homeTimer > 0) { g.homeTimer -= 16; return; }
     if (g.eaten) {
-        // Return to ghost house
+
         int targetX = 10, targetY = 9;
         int bestDist = 9999, bestDir = g.dir;
         for (int d = 0; d < 4; d++) {
             int nx = g.x + DX[d];
             int ny = g.y + DY[d];
             if (!isWalkable(nx, ny)) continue;
-            if ((d + 2) % 4 == g.dir) continue; // no reversing
+            if ((d + 2) % 4 == g.dir) continue;
             int dist = abs(nx - targetX) + abs(ny - targetY);
             if (dist < bestDist) { bestDist = dist; bestDir = d; }
         }
@@ -297,10 +285,9 @@ static void moveGhost(Ghost& g) {
         return;
     }
 
-    // Target: chase pac-man or scatter
     int targetX, targetY;
     if (g.frightened) {
-        // Random movement when frightened
+
         int dirs[4] = {0,1,2,3};
         for (int i = 0; i < 4; i++) {
             int j = random(i, 4);
@@ -316,7 +303,7 @@ static void moveGhost(Ghost& g) {
                 return;
             }
         }
-        // Can't move in any new direction, allow reverse
+
         for (int i = 0; i < 4; i++) {
             int nx = g.x + DX[i];
             int ny = g.y + DY[i];
@@ -330,7 +317,6 @@ static void moveGhost(Ghost& g) {
         return;
     }
 
-    // Target pac-man
     targetX = pacX;
     targetY = pacY;
 
@@ -339,7 +325,7 @@ static void moveGhost(Ghost& g) {
         int nx = g.x + DX[d];
         int ny = g.y + DY[d];
         if (!isWalkable(nx, ny)) continue;
-        if ((d + 2) % 4 == g.dir) continue; // no reversing
+        if ((d + 2) % 4 == g.dir) continue;
         int dist = abs(nx - targetX) + abs(ny - targetY);
         if (dist < bestDist) { bestDist = dist; bestDir = d; }
     }
@@ -348,7 +334,6 @@ static void moveGhost(Ghost& g) {
     g.y += DY[g.dir];
 }
 
-// ── Game Over Overlay ──────────────────────────
 static void drawOverlay() {
     tft.fillRect(0, 0, SCREEN_W, SCREEN_H, TFT_BLACK);
     tft.drawRect(0, 0, SCREEN_W, SCREEN_H, 0x00AA);
@@ -383,7 +368,6 @@ static void drawOverlay() {
     tft.print("LEFT/RIGHT: select  SW: confirm");
 }
 
-// ── Win Overlay ────────────────────────────────
 static void drawWinOverlay() {
     tft.fillRect(0, 0, SCREEN_W, SCREEN_H, TFT_BLACK);
     tft.drawRect(0, 0, SCREEN_W, SCREEN_H, TFT_YELLOW);
@@ -414,7 +398,6 @@ static void drawWinOverlay() {
     tft.print("LEFT/RIGHT: select  SW: confirm");
 }
 
-// ── Main run ───────────────────────────────────
 void run() {
     gameStarted = false;
     isGameOver = false;
@@ -426,12 +409,10 @@ void run() {
 
     tft.fillScreen(TFT_BLACK);
 
-    // Title screen
     Display::drawPanel(50, 40, SCREEN_W - 100, 240, TFT_BLACK, 0x00AA, 12);
 
-    // Draw Pac-Man logo
     tft.fillCircle(240, 85, 20, TFT_YELLOW);
-    tft.fillTriangle(240, 85, 260, 70, 260, 100, TFT_BLACK); // mouth
+    tft.fillTriangle(240, 85, 260, 70, 260, 100, TFT_BLACK);
 
     Display::drawCentredText("DOODLE JUMP", 120, 3, TFT_YELLOW);
     Display::drawCentredText("Jump & climb!", 160, 2, TFT_WHITE);
@@ -451,36 +432,26 @@ void run() {
 
     reset();
 
-    // ── Game loop ──
     while (true) {
         Input::update();
 
         if (!isGameOver && !isWon) {
-            // Exit with BOTTOM
-            if (Input::pressed(Input::BOTTOM)) {
-                Sounds::sfxBack();
-                return;
-            }
 
-            // ── Input direction ──
             if (Input::pressed(Input::LEFT)) pacNextDir = 2;
             else if (Input::pressed(Input::RIGHT)) pacNextDir = 0;
             else if (Input::pressed(Input::TOP)) pacNextDir = 3;
             else if (Input::pressed(Input::BOTTOM)) pacNextDir = 1;
 
-            // ── Movement timer ──
             pacTimer++;
             if (pacTimer >= 4) {
                 pacTimer = 0;
 
-                // Try next direction first
                 int nx = pacX + DX[pacNextDir];
                 int ny = pacY + DY[pacNextDir];
                 if (isWalkable(nx, ny)) {
                     pacDir = pacNextDir;
                 }
 
-                // Move in current direction
                 nx = pacX + DX[pacDir];
                 ny = pacY + DY[pacDir];
                 if (isWalkable(nx, ny)) {
@@ -489,14 +460,13 @@ void run() {
                     pacY = ny;
                     animFrame++;
 
-                    // Check dot/power pellet
                     uint8_t cell = MAZE[pacY][pacX];
                     if (cell == 2) {
                         score += 10;
                         dotsRemaining--;
-                        // Replace dot with empty
+
                         const_cast<uint8_t&>(MAZE[pacY][pacX]) = 0;
-                        // Update HUD
+
                         tft.fillRect(MAZE_X, MAZE_Y + MAZE_ROWS * TILE + 2, 100, 10, TFT_BLACK);
                         tft.setTextColor(TFT_WHITE, TFT_BLACK);
                         tft.setCursor(MAZE_X, MAZE_Y + MAZE_ROWS * TILE + 4);
@@ -511,7 +481,7 @@ void run() {
                             if (!ghosts[i].eaten) ghosts[i].frightened = true;
                         }
                         Sounds::sfxPowerUp();
-                        // Update HUD
+
                         tft.fillRect(MAZE_X, MAZE_Y + MAZE_ROWS * TILE + 2, 100, 10, TFT_BLACK);
                         tft.setTextColor(TFT_WHITE, TFT_BLACK);
                         tft.setCursor(MAZE_X, MAZE_Y + MAZE_ROWS * TILE + 4);
@@ -519,35 +489,36 @@ void run() {
                         tft.print(score);
                     }
 
-                    // Draw Pac-Man
                     drawPacMan(pacX, pacY, pacDir, animFrame);
                 }
 
-                // Move ghosts
-                for (int i = 0; i < 4; i++) {
-                    eraseGhost(ghosts[i]);
-                    moveGhost(ghosts[i]);
-                    drawGhost(ghosts[i]);
+                ghostMoveCounter++;
+                if (ghostMoveCounter >= 2) {
+                    ghostMoveCounter = 0;
+                    for (int i = 0; i < 4; i++) {
+                        eraseGhost(ghosts[i]);
+                        moveGhost(ghosts[i]);
+                        drawGhost(ghosts[i]);
+                    }
                 }
 
-                // Collision check
                 for (int i = 0; i < 4; i++) {
                     if (ghosts[i].x == pacX && ghosts[i].y == pacY) {
                         if (ghosts[i].frightened && !ghosts[i].eaten) {
-                            // Eat ghost
+
                             ghosts[i].eaten = true;
                             ghosts[i].frightened = false;
                             ghosts[i].homeTimer = 0;
                             score += 200;
                             Sounds::sfxEnemyHit();
-                            // Update HUD
+
                             tft.fillRect(MAZE_X, MAZE_Y + MAZE_ROWS * TILE + 2, 100, 10, TFT_BLACK);
                             tft.setTextColor(TFT_WHITE, TFT_BLACK);
                             tft.setCursor(MAZE_X, MAZE_Y + MAZE_ROWS * TILE + 4);
                             tft.print("SCORE: ");
                             tft.print(score);
                         } else if (!ghosts[i].eaten && !ghosts[i].frightened) {
-                            // Die
+
                             lives--;
                             Sounds::sfxPlayerHit();
                             tft.fillRect(MAZE_X + 250, MAZE_Y + MAZE_ROWS * TILE + 2, 100, 10, TFT_BLACK);
@@ -564,7 +535,7 @@ void run() {
                                 NVS::save();
                                 Sounds::sfxGameOver();
                             } else {
-                                // Reset positions
+
                                 pacX = 10; pacY = 15;
                                 pacDir = 0; pacNextDir = 0;
                                 drawPacMan(pacX, pacY, pacDir, 0);
@@ -584,7 +555,6 @@ void run() {
                     }
                 }
 
-                // Win condition
                 if (dotsRemaining <= 0) {
                     isWon = true;
                     g_app.highScores[2] = max(g_app.highScores[2], (uint32_t)score);
@@ -593,7 +563,6 @@ void run() {
                 }
             }
 
-            // Frightened timer
             if (frightenedTimer > 0) {
                 frightenedTimer -= 16;
                 if (frightenedTimer <= 0) {
@@ -666,6 +635,6 @@ void run() {
     }
 }
 
-} // namespace PacMan
+}
 
 #endif

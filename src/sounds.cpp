@@ -28,8 +28,6 @@ void silence(int durationMs) {
     _gap(durationMs);
 }
 
-// ── Effects ──
-
 void sfxClick()      { _beep(12); }
 void sfxSelect()     { _beep(40); _gap(20); _beep(80); }
 void sfxBack()       { _beep(80); _gap(20); _beep(40); }
@@ -55,4 +53,4 @@ void jingleStartup() {
     _beep(200);
 }
 
-} // namespace Sounds
+}

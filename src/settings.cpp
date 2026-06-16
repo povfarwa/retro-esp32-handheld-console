@@ -8,12 +8,11 @@
 
 namespace Settings {
 
-// ── STASIS GAMING Theme Colors ──
-static const uint16_t C_DARK_NAVY   = 0x0000;  // pure black
-static const uint16_t C_SLATE       = 0x8C71;  // medium gray
+static const uint16_t C_DARK_NAVY   = 0x0000;
+static const uint16_t C_SLATE       = 0x8C71;
 static const uint16_t C_NEON_BLUE   = 0x07FF;
 static const uint16_t C_NEON_CYAN   = 0x06FF;
-static const uint16_t C_PILL_GRAY   = 0x8C71;  // medium gray
+static const uint16_t C_PILL_GRAY   = 0x8C71;
 static const uint16_t C_BLUE_GLOW   = 0x001F;
 static const uint16_t C_CIRCUIT     = 0x00AA;
 
@@ -49,7 +48,6 @@ static void drawTopBar() {
     tft.setCursor(8, 11);
     tft.print("STASIS GAMING");
 
-    // Battery
     int batX = SCREEN_W - 195;
     tft.drawRect(batX, 6, 22, 12, TFT_BLACK);
     tft.drawRect(batX + 22, 9, 3, 6, TFT_BLACK);
@@ -58,11 +56,9 @@ static void drawTopBar() {
     tft.setCursor(batX + 28, 11);
     tft.print("25%");
 
-    // Time
     tft.setCursor(batX + 65, 11);
     tft.print("07:30 PM");
 
-    // WiFi
     int wifiX = batX + 105;
     tft.drawCircle(wifiX + 5, 15, 6, C_NEON_BLUE);
     tft.drawCircle(wifiX + 5, 15, 3, C_NEON_BLUE);
@@ -80,7 +76,6 @@ static void drawBottomBar() {
     int spacing = SCREEN_W / 3;
     int navY = SCREEN_H - 22;
 
-    // Back
     tft.setTextSize(2);
     tft.setTextColor(TFT_WHITE, C_SLATE);
     tft.setCursor(spacing/2 - 20, navY);
@@ -89,7 +84,6 @@ static void drawBottomBar() {
     tft.setCursor(spacing/2 - 4, navY + 4);
     tft.print("Back");
 
-    // Settings highlight
     tft.fillRoundRect(spacing - 30, SCREEN_H - 28, spacing + 60, 24, 6, C_DARK_NAVY);
     tft.setTextColor(C_NEON_BLUE, C_DARK_NAVY);
     tft.setTextSize(2);
@@ -99,7 +93,6 @@ static void drawBottomBar() {
     tft.setCursor(spacing + spacing/2 - 12, navY + 4);
     tft.print("Settings");
 
-    // Profile
     tft.setTextColor(TFT_WHITE, C_SLATE);
     tft.setTextSize(2);
     tft.setCursor(spacing * 2 + spacing/2 - 24, navY);
@@ -140,14 +133,12 @@ static void drawScreen() {
     int yOff = 80;
     int lineH = 35;
 
-    // ── Brightness ──
     uint16_t cBright = (_cursor == 0) ? C_NEON_CYAN : TFT_WHITE;
     tft.setTextSize(2);
     tft.setTextColor(cBright, C_DARK_NAVY);
     tft.setCursor(labelX, yOff - 8);
     tft.print("BRIGHTNESS");
 
-    // Brightness slider
     int barX = valueX;
     int barY = yOff + 5;
     int barW = SCREEN_W - valueX - 30;
@@ -158,7 +149,6 @@ static void drawScreen() {
     tft.fillRoundRect(barX, barY, (int)(barW * frac), barH, 8, C_NEON_BLUE);
     tft.fillCircle(barX + (int)(barW * frac), barY + barH/2, 8, TFT_WHITE);
 
-    // ── Sounds ──
     yOff += lineH + 15;
     uint16_t cSound = (_cursor == 1) ? C_NEON_CYAN : TFT_WHITE;
     tft.setTextSize(2);
@@ -166,7 +156,6 @@ static void drawScreen() {
     tft.setCursor(labelX, yOff);
     tft.print("SOUNDS");
 
-    // Toggle switch
     int swX = valueX;
     int swY = yOff;
     int swW = 60;
@@ -193,10 +182,9 @@ void run() {
     while (true) {
         Input::update();
 
-        // Joystick axis for cursor navigation (UP/DOWN)
         Input::Axis ax = Input::axis();
         bool upPress   = Input::pressed(Input::TOP) || ax.y < -15;
-        bool downPress = Input::pressed(Input::BOTTOM) || ax.y > 15;
+        bool downPress = ax.y > 15;
 
         if (upPress && _cursor > 0) {
             _cursor--;
@@ -208,8 +196,18 @@ void run() {
             Sounds::sfxClick();
             drawScreen();
         }
+        if (Input::pressed(Input::BOTTOM)) {
+            if (_cursor == 1) {
+                save();
+                Sounds::sfxBack();
+                return;
+            } else if (_cursor < 1) {
+                _cursor++;
+                Sounds::sfxClick();
+                drawScreen();
+            }
+        }
 
-        // Back on SW only (LEFT is used for brightness/sound adjustment)
         if (Input::pressed(Input::SW)) {
             save();
             Sounds::sfxBack();
@@ -221,7 +219,7 @@ void run() {
 
         if (leftPressed || rightPressed) {
             if (_cursor == 0) {
-                // Brightness
+
                 if (rightPressed) {
                     g_app.brightness = (g_app.brightness + 10 > 100) ? 100 : g_app.brightness + 10;
                 } else {
@@ -232,15 +230,17 @@ void run() {
                 Sounds::sfxClick();
             }
             if (_cursor == 1) {
-                // Sound: RIGHT=ON, LEFT=OFF, LEFT-again=back
+
                 if (rightPressed) {
-                    g_app.soundOn = true;
-                    Sounds::sfxClick();
+                    if (!g_app.soundOn) {
+                        g_app.soundOn = true;
+                        Sounds::sfxClick();
+                    }
                 } else if (g_app.soundOn) {
                     g_app.soundOn = false;
                     Sounds::sfxClick();
                 } else {
-                    // Already OFF, LEFT again = back
+
                     save();
                     Sounds::sfxBack();
                     return;
@@ -253,4 +253,4 @@ void run() {
     }
 }
 
-} // namespace Settings
+}

@@ -1,13 +1,6 @@
 #pragma once
 #include <Arduino.h>
 
-// ─────────────────────────────────────────────
-//  Input abstraction
-//  Call Input::update() every frame.
-//  Use pressed() / held() / axis() to read state.
-//  Also populates g_input for game compatibility.
-// ─────────────────────────────────────────────
-
 namespace Input {
 
     enum Button {
@@ -15,13 +8,13 @@ namespace Input {
         BOTTOM = 1,
         LEFT   = 2,
         RIGHT  = 3,
-        SW     = 4,   // joystick click
+        SW     = 4,
         COUNT  = 5
     };
 
     struct Axis {
-        int x;  // -100..+100, negative=left
-        int y;  // -100..+100, negative=up
+        int x;
+        int y;
     };
 
     void  init();
@@ -31,6 +24,6 @@ namespace Input {
     bool  released(Button b);
     bool  held(Button b);
     Axis  axis();
-    void  beep(int ms = 30);        // fire buzzer for ms
+    void  beep(int ms = 30);
     void  beepTone(int ms, int repeatCount = 1);
 }
