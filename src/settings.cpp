@@ -1,189 +1,256 @@
 #include "settings.h"
-#include "ui.h"
-#include "menu.h"
+#include "config.h"
+#include "display.h"
+#include "input.h"
 #include "sounds.h"
+#include "globals.h"
 #include "nvs_save.h"
 
-// Focus: 0 = brightness slider, 1 = sound toggle
-static int  focus       = 0;
-bool Settings::needsRedraw = true;
+namespace Settings {
 
-// ── Apply brightness to backlight ─────────────────────────────────
-static void applyBrightness() {
-    static bool pwmInit = false;
-    if (!pwmInit) {
-        ledcSetup(0, 5000, 8);
-        ledcAttachPin(TFT_BL, 0);
-        pwmInit = true;
-    }
-    uint8_t val = map(g_app.brightness, 0, 100, 0, 255);
-    ledcWrite(0, val);
+// ── STASIS GAMING Theme Colors ──
+static const uint16_t C_DARK_NAVY   = 0x0000;  // pure black
+static const uint16_t C_SLATE       = 0x8C71;  // medium gray
+static const uint16_t C_NEON_BLUE   = 0x07FF;
+static const uint16_t C_NEON_CYAN   = 0x06FF;
+static const uint16_t C_PILL_GRAY   = 0x8C71;  // medium gray
+static const uint16_t C_BLUE_GLOW   = 0x001F;
+static const uint16_t C_CIRCUIT     = 0x00AA;
+
+static int _cursor = 0;
+
+void init() {
+    NVS::load();
 }
 
-// ── Draw the brightness slider ────────────────────────────────────
-// Design: label "BRIGHTNESS" on left, slider bar to right.
-// Bar: left portion up to the circular thumb is bright blue,
-//      remaining right portion is gray.
-static void drawBrightnessRow() {
-    int lx = INNER_X + 32;
-    int ly = INNER_Y + 85;
+void save() {
+    NVS::save();
+}
 
-    // Label
-    tft.setTextColor(C_TEXT, C_BG);
-    tft.setTextDatum(ML_DATUM);
-    tft.setTextSize(2);
-    tft.drawString("BRIGHTNESS", lx, ly + 6);
+static void drawCircuitPattern(int x, int y, int w, int h) {
+    for (int yy = y; yy < y + h; yy += 16) {
+        tft.drawPixel(x + 2, yy, C_CIRCUIT);
+        tft.drawPixel(x + 2, yy + 4, C_CIRCUIT);
+        tft.drawPixel(x + 6, yy + 4, C_CIRCUIT);
+        tft.drawPixel(x + 6, yy + 8, C_CIRCUIT);
+        tft.drawPixel(x + 2, yy + 8, C_CIRCUIT);
+        tft.drawPixel(x + w - 2, yy, C_CIRCUIT);
+        tft.drawPixel(x + w - 2, yy + 4, C_CIRCUIT);
+        tft.drawPixel(x + w - 6, yy + 4, C_CIRCUIT);
+        tft.drawPixel(x + w - 6, yy + 8, C_CIRCUIT);
+        tft.drawPixel(x + w - 2, yy + 8, C_CIRCUIT);
+    }
+}
 
-    // Slider bar
-    int barX = lx + 210, barY = ly + 2, barW = 140, barH = 10;
-
-    // Full track (gray)
-    tft.fillRoundRect(barX, barY, barW, barH, barH / 2, C_PANEL);
-
-    // Filled portion up to current value (bright blue)
-    int fillW = (int)((float)g_app.brightness / 100.0f * (barW - 2));
-    if (fillW > 0)
-        tft.fillRoundRect(barX + 1, barY + 1, fillW, barH - 2, (barH - 2) / 2, C_ACCENT);
-
-    // Circular thumb at transition point
-    int thumbX = barX + fillW;
-    int thumbY = barY + barH / 2;
-    tft.fillCircle(thumbX, thumbY, 8, focus == 0 ? C_ACCENT : C_TEXT);
-    tft.drawCircle(thumbX, thumbY, 8, C_WHITE);
-    tft.fillCircle(thumbX, thumbY, 4, C_WHITE);
-
-    // Brightness percentage label
-    char buf[8];
-    sprintf(buf, "%d%%", g_app.brightness);
-    tft.setTextColor(C_TEXT, C_BG);
-    tft.setTextDatum(ML_DATUM);
+static void drawTopBar() {
+    tft.fillRect(0, 0, SCREEN_W, 32, C_SLATE);
     tft.setTextSize(1);
-    tft.drawString(buf, barX + barW + 12, barY + barH / 2);
+    tft.setTextColor(TFT_WHITE, C_SLATE);
+    tft.setCursor(8, 11);
+    tft.print("STASIS GAMING");
 
-    // Focus highlight ring
-    if (focus == 0)
-        tft.drawRoundRect(lx - 4, ly - 10, INNER_W - 24, 34, 6, C_ACCENT);
+    // Battery
+    int batX = SCREEN_W - 195;
+    tft.drawRect(batX, 6, 22, 12, TFT_BLACK);
+    tft.drawRect(batX + 22, 9, 3, 6, TFT_BLACK);
+    tft.fillRect(batX + 2, 8, 5, 8, C_NEON_BLUE);
+    tft.setTextColor(TFT_WHITE, C_SLATE);
+    tft.setCursor(batX + 28, 11);
+    tft.print("25%");
+
+    // Time
+    tft.setCursor(batX + 65, 11);
+    tft.print("07:30 PM");
+
+    // WiFi
+    int wifiX = batX + 105;
+    tft.drawCircle(wifiX + 5, 15, 6, C_NEON_BLUE);
+    tft.drawCircle(wifiX + 5, 15, 3, C_NEON_BLUE);
+    tft.fillCircle(wifiX + 5, 15, 1, C_NEON_BLUE);
+    tft.setTextColor(C_NEON_BLUE, C_SLATE);
+    tft.setCursor(wifiX + 16, 7);
+    tft.print("WiFi");
+    tft.setCursor(wifiX + 16, 16);
+    tft.print("(CONNECTED)");
 }
 
-// ── Draw the sound toggle ─────────────────────────────────────────
-// Design: label "SOUNDS" on left, toggle switch to right.
-// Switch: bright blue capsule with white circular slider + "ON/OFF" text
-static void drawSoundRow() {
-    int lx = INNER_X + 32;
-    int ly = INNER_Y + 148;
+static void drawBottomBar() {
+    tft.fillRect(0, SCREEN_H - 32, SCREEN_W, 32, C_SLATE);
 
-    // Label
-    tft.setTextColor(C_TEXT, C_BG);
-    tft.setTextDatum(ML_DATUM);
+    int spacing = SCREEN_W / 3;
+    int navY = SCREEN_H - 22;
+
+    // Back
     tft.setTextSize(2);
-    tft.drawString("SOUNDS", lx, ly + 6);
+    tft.setTextColor(TFT_WHITE, C_SLATE);
+    tft.setCursor(spacing/2 - 20, navY);
+    tft.print("<");
+    tft.setTextSize(1);
+    tft.setCursor(spacing/2 - 4, navY + 4);
+    tft.print("Back");
 
-    // Toggle switch capsule
-    int swX = lx + 210, swY = ly - 6, swW = 64, swH = 30;
-    uint16_t capsuleBg = g_app.soundOn ? C_ACCENT : C_PANEL2;
-    tft.fillRoundRect(swX, swY, swW, swH, swH / 2, capsuleBg);
-    tft.drawRoundRect(swX, swY, swW, swH, swH / 2, C_ACCENT);
-
-    // White circular slider knob
-    int knobX = g_app.soundOn ? swX + swW - swH + 4 : swX + 4;
-    tft.fillCircle(knobX, swY + swH / 2, swH / 2 - 5, C_WHITE);
-    tft.drawCircle(knobX, swY + swH / 2, swH / 2 - 5, C_TEXT_DIM);
-    // Inner dot
-    tft.fillCircle(knobX, swY + swH / 2, 3, capsuleBg);
-
-    // ON/OFF text
-    tft.setTextColor(C_TEXT, C_BG);
-    tft.setTextDatum(ML_DATUM);
+    // Settings highlight
+    tft.fillRoundRect(spacing - 30, SCREEN_H - 28, spacing + 60, 24, 6, C_DARK_NAVY);
+    tft.setTextColor(C_NEON_BLUE, C_DARK_NAVY);
     tft.setTextSize(2);
-    tft.drawString(g_app.soundOn ? "ON" : "OFF", swX + swW + 16, ly + 6);
+    tft.setCursor(spacing + spacing/2 - 28, navY);
+    tft.print("*");
+    tft.setTextSize(1);
+    tft.setCursor(spacing + spacing/2 - 12, navY + 4);
+    tft.print("Settings");
 
-    // Focus highlight ring
-    if (focus == 1)
-        tft.drawRoundRect(lx - 4, ly - 10, INNER_W - 24, 38, 6, C_ACCENT);
+    // Profile
+    tft.setTextColor(TFT_WHITE, C_SLATE);
+    tft.setTextSize(2);
+    tft.setCursor(spacing * 2 + spacing/2 - 24, navY);
+    tft.print(")");
+    tft.setTextSize(1);
+    tft.setCursor(spacing * 2 + spacing/2 - 8, navY + 4);
+    tft.print("Profile");
 }
 
-// ── Public API ────────────────────────────────────────────────────
-
-void Settings::init() {
-    focus = 0;
-    needsRedraw = true;
-    applyBrightness();
-}
-
-bool Settings::needsDraw() { return needsRedraw; }
-void Settings::setNeedsRedraw() { needsRedraw = true; }
-
-void Settings::draw() {
-    if (!needsRedraw) return;
-    needsRedraw = false;
-
-    UI::drawChrome("SETTINGS", NavActive::SETTINGS);
-    drawBrightnessRow();
-    drawSoundRow();
-}
-
-void Settings::update() {
-    bool changed = false;
-
-    // Switch focus row (joystick Y or B/C buttons)
-    if (g_input.joyY > 50 || g_input.btnBP) {
-        focus = (focus + 1) % 2;
-        changed = true;
-        if (g_app.soundOn) Sounds::sfxClick();
-        delay(200);
+static void drawFrame() {
+    for (int i = 0; i < 3; i++) {
+        tft.drawFastVLine(4 + i, 32, SCREEN_H - 64, C_BLUE_GLOW);
+        tft.drawFastVLine(SCREEN_W - 4 - i, 32, SCREEN_H - 64, C_BLUE_GLOW);
     }
-    if (g_input.joyY < -50 || g_input.btnCP) {
-        focus = (focus + 1) % 2;
-        changed = true;
-        if (g_app.soundOn) Sounds::sfxClick();
-        delay(200);
+    drawCircuitPattern(4, 36, 8, SCREEN_H - 72);
+    drawCircuitPattern(SCREEN_W - 12, 36, 8, SCREEN_H - 72);
+}
+
+static void drawPageTitle() {
+    int tw = 110;
+    int tx = (SCREEN_W - tw) / 2;
+    tft.fillRoundRect(tx, 36, tw, 18, 9, C_PILL_GRAY);
+    tft.setTextSize(1);
+    tft.setTextColor(TFT_WHITE, C_PILL_GRAY);
+    tft.setCursor(tx + (tw - tft.textWidth("SETTINGS")) / 2, 39);
+    tft.print("SETTINGS");
+}
+
+static void drawScreen() {
+    tft.fillScreen(C_DARK_NAVY);
+    drawTopBar();
+    drawBottomBar();
+    drawFrame();
+    drawPageTitle();
+
+    int labelX = 30;
+    int valueX = 200;
+    int yOff = 80;
+    int lineH = 35;
+
+    // ── Brightness ──
+    uint16_t cBright = (_cursor == 0) ? C_NEON_CYAN : TFT_WHITE;
+    tft.setTextSize(2);
+    tft.setTextColor(cBright, C_DARK_NAVY);
+    tft.setCursor(labelX, yOff - 8);
+    tft.print("BRIGHTNESS");
+
+    // Brightness slider
+    int barX = valueX;
+    int barY = yOff + 5;
+    int barW = SCREEN_W - valueX - 30;
+    int barH = 16;
+    float frac = g_app.brightness / 100.0f;
+
+    tft.fillRoundRect(barX, barY, barW, barH, 8, 0x2124);
+    tft.fillRoundRect(barX, barY, (int)(barW * frac), barH, 8, C_NEON_BLUE);
+    tft.fillCircle(barX + (int)(barW * frac), barY + barH/2, 8, TFT_WHITE);
+
+    // ── Sounds ──
+    yOff += lineH + 15;
+    uint16_t cSound = (_cursor == 1) ? C_NEON_CYAN : TFT_WHITE;
+    tft.setTextSize(2);
+    tft.setTextColor(cSound, C_DARK_NAVY);
+    tft.setCursor(labelX, yOff);
+    tft.print("SOUNDS");
+
+    // Toggle switch
+    int swX = valueX;
+    int swY = yOff;
+    int swW = 60;
+    int swH = 26;
+
+    if (g_app.soundOn) {
+        tft.fillRoundRect(swX, swY, swW, swH, 13, C_NEON_BLUE);
+        tft.fillCircle(swX + swW - 13, swY + swH/2, 10, TFT_WHITE);
+    } else {
+        tft.fillRoundRect(swX, swY, swW, swH, 13, 0x630C);
+        tft.fillCircle(swX + 13, swY + swH/2, 10, 0x3186);
     }
 
-    if (focus == 0) {
-        // Brightness adjustment
-        if ((g_input.joyX > 40 || g_input.btnAP) && g_app.brightness < 100) {
-            g_app.brightness = min(100, g_app.brightness + 5);
-            changed = true;
-            applyBrightness();
-            if (g_app.soundOn) Sounds::sfxClick();
-            delay(80);
+    tft.setTextSize(1);
+    tft.setTextColor(cSound, C_DARK_NAVY);
+    tft.setCursor(swX + swW + 10, swY + 6);
+    tft.print(g_app.soundOn ? "ON" : "OFF");
+}
+
+void run() {
+    _cursor = 0;
+    drawScreen();
+
+    while (true) {
+        Input::update();
+
+        // Joystick axis for cursor navigation (UP/DOWN)
+        Input::Axis ax = Input::axis();
+        bool upPress   = Input::pressed(Input::TOP) || ax.y < -15;
+        bool downPress = Input::pressed(Input::BOTTOM) || ax.y > 15;
+
+        if (upPress && _cursor > 0) {
+            _cursor--;
+            Sounds::sfxClick();
+            drawScreen();
         }
-        if ((g_input.joyX < -40 || g_input.btnDP) && g_app.brightness > 0) {
-            g_app.brightness = max(0, (int)g_app.brightness - 5);
-            changed = true;
-            applyBrightness();
-            if (g_app.soundOn) Sounds::sfxClick();
-            delay(80);
+        if (downPress && _cursor < 1) {
+            _cursor++;
+            Sounds::sfxClick();
+            drawScreen();
         }
-    }
 
-    if (focus == 1) {
-        // Toggle sound on joystick push or A button
-        if (g_input.joyBtnP || g_input.btnAP) {
-            g_app.soundOn = !g_app.soundOn;
-            changed = true;
-            if (g_app.soundOn) Sounds::sfxSelect();
-            delay(200);
+        // Back on SW only (LEFT is used for brightness/sound adjustment)
+        if (Input::pressed(Input::SW)) {
+            save();
+            Sounds::sfxBack();
+            return;
         }
-    }
 
-    if (changed) {
-        needsRedraw = true;
-        NVS::save();
-    }
+        bool leftPressed = Input::pressed(Input::LEFT);
+        bool rightPressed = Input::pressed(Input::RIGHT);
 
-    // Back to main menu
-    if (g_input.joyBtnP && focus == 0) {
-        g_app.screen = Screen::HOME;
-        if (g_app.soundOn) Sounds::sfxBack();
-        Menu::setNeedsRedraw();
-        delay(200);
-    }
+        if (leftPressed || rightPressed) {
+            if (_cursor == 0) {
+                // Brightness
+                if (rightPressed) {
+                    g_app.brightness = (g_app.brightness + 10 > 100) ? 100 : g_app.brightness + 10;
+                } else {
+                    g_app.brightness = (g_app.brightness < 10) ? 0 : g_app.brightness - 10;
+                }
+                int pwm = map(g_app.brightness, 0, 100, 0, 255);
+                analogWrite(PIN_BACKLIGHT, pwm);
+                Sounds::sfxClick();
+            }
+            if (_cursor == 1) {
+                // Sound: RIGHT=ON, LEFT=OFF, LEFT-again=back
+                if (rightPressed) {
+                    g_app.soundOn = true;
+                    Sounds::sfxClick();
+                } else if (g_app.soundOn) {
+                    g_app.soundOn = false;
+                    Sounds::sfxClick();
+                } else {
+                    // Already OFF, LEFT again = back
+                    save();
+                    Sounds::sfxBack();
+                    return;
+                }
+            }
+            drawScreen();
+        }
 
-    if (g_input.btnDP) {
-        g_app.screen = Screen::HOME;
-        if (g_app.soundOn) Sounds::sfxBack();
-        Menu::setNeedsRedraw();
-        delay(200);
+        delay(16);
     }
 }
+
+} // namespace Settings

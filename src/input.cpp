@@ -1,47 +1,97 @@
 #include "input.h"
+#include "config.h"
+#include "globals.h"
+#include "sounds.h"
 
-// Previous raw button states for edge detection
-static bool _prevJoy, _prevA, _prevB, _prevC, _prevD;
+namespace Input {
 
-void Input::init() {
-    pinMode(PIN_JOY_SW, INPUT_PULLUP);
-    pinMode(PIN_BTN_A,  INPUT_PULLUP);
-    pinMode(PIN_BTN_B,  INPUT_PULLUP);
-    pinMode(PIN_BTN_C,  INPUT_PULLUP);
-    pinMode(PIN_BTN_D,  INPUT_PULLUP);
+static const uint8_t _pins[COUNT] = {
+    PIN_BTN_TOP,
+    PIN_BTN_BOTTOM,
+    PIN_BTN_LEFT,
+    PIN_BTN_RIGHT,
+    PIN_JOY_SW
+};
+
+static bool _cur[COUNT]  = {};
+static bool _prev[COUNT] = {};
+
+static int _centerX = 2048;
+static int _centerY = 2048;
+
+void init() {
+    for (int i = 0; i < COUNT; i++)
+        pinMode(_pins[i], INPUT_PULLUP);
+
+    pinMode(PIN_JOY_X, INPUT);
+    pinMode(PIN_JOY_Y, INPUT);
+
+    // Calibrate joystick centre
+    delay(200);
+    long sumX = 0, sumY = 0;
+    for (int i = 0; i < 64; i++) {
+        sumX += analogRead(PIN_JOY_X);
+        sumY += analogRead(PIN_JOY_Y);
+        delay(3);
+    }
+    _centerX = (int)(sumX / 64);
+    _centerY = (int)(sumY / 64);
 }
 
-void Input::poll() {
-    // Joystick axes  (0-4095 → -100..+100)
-    // X is physically inverted per wiring doc
+void update() {
+    for (int i = 0; i < COUNT; i++) {
+        _prev[i] = _cur[i];
+        _cur[i]  = (digitalRead(_pins[i]) == LOW);
+    }
+
+    // Populate g_input for legacy game compatibility
+    Axis a = axis();
+    g_input.joyX    = a.x;
+    g_input.joyY    = a.y;
+    g_input.joyBtn  = _cur[SW];
+    g_input.joyBtnP = pressed(SW);
+    g_input.btnA    = _cur[RIGHT];
+    g_input.btnAP   = pressed(RIGHT);
+    g_input.btnB    = _cur[BOTTOM];
+    g_input.btnBP   = pressed(BOTTOM);
+    g_input.btnC    = _cur[TOP];
+    g_input.btnCP   = pressed(TOP);
+    g_input.btnD    = _cur[LEFT];
+    g_input.btnDP   = pressed(LEFT);
+}
+
+bool pressed(Button b)  { return  _cur[b] && !_prev[b]; }
+bool released(Button b) { return !_cur[b] &&  _prev[b]; }
+bool held(Button b)     { return  _cur[b]; }
+
+Axis axis() {
     int rawX = analogRead(PIN_JOY_X);
     int rawY = analogRead(PIN_JOY_Y);
-    g_input.joyX = map(rawX, 0, 4095, 100, -100);   // inverted
-    g_input.joyY = map(rawY, 0, 4095, -100, 100);
 
-    // Buttons (active LOW)
-    bool curJoy = !digitalRead(PIN_JOY_SW);
-    bool curA   = !digitalRead(PIN_BTN_A);
-    bool curB   = !digitalRead(PIN_BTN_B);
-    bool curC   = !digitalRead(PIN_BTN_C);
-    bool curD   = !digitalRead(PIN_BTN_D);
+    int dx = rawX - _centerX;
+    int dy = rawY - _centerY;
 
-    g_input.joyBtn = curJoy;
-    g_input.btnA   = curA;
-    g_input.btnB   = curB;
-    g_input.btnC   = curC;
-    g_input.btnD   = curD;
+    if (dx > -200 && dx < 200) dx = 0;
+    if (dy > -200 && dy < 200) dy = 0;
 
-    // Edge-detect (pressed THIS frame only)
-    g_input.joyBtnP = curJoy && !_prevJoy;
-    g_input.btnAP   = curA   && !_prevA;
-    g_input.btnBP   = curB   && !_prevB;
-    g_input.btnCP   = curC   && !_prevC;
-    g_input.btnDP   = curD   && !_prevD;
+    int nx = 0, ny = 0;
+    if (dx != 0)
+        nx = constrain(map(-dx, -2048, 2048, -100, 100), -100, 100);
+    if (dy != 0)
+        ny = constrain(map( dy, -2048, 2048, -100, 100), -100, 100);
 
-    _prevJoy = curJoy;
-    _prevA   = curA;
-    _prevB   = curB;
-    _prevC   = curC;
-    _prevD   = curD;
+    return {nx, ny};
 }
+
+void beep(int ms) {
+    Sounds::tone(1000, ms);
+}
+
+void beepTone(int ms, int repeatCount) {
+    for (int i = 0; i < repeatCount; i++) {
+        Sounds::tone(1000, ms);
+        if (i < repeatCount - 1) Sounds::silence(ms);
+    }
+}
+
+} // namespace Input

@@ -13,11 +13,26 @@ you will be able to play 5 to 6 old games
 3. **Joystick:** Used for selecting menus, choosing games and for play games
 
 ---
+## My Console
+![console](./images/console.png)
+![console](./images/console2.png)
+![console](./images/console3.png)
+![console](./images/console4.png)
+
+---
+
+## Playing and testing on my gaming console
+![menu](./videos/menu.mp4)
+
+---
 
 ## Failures And Realization
 When I added the products to the list it was time to design the scematic of the project First I designed it on the paper page but after sometime I realized hat I made a mistake like I added a poweer bank but why would i need power bank when I am already using the battery
 I spent at least 2 hours on it cause it was my first time. When I tried to fiz it I even messed up more then I realized that I should make it digital because now I know my mistakes and also when I ws making my PCB Design i really got stuck up many times but at the end I 
-finnaly complete it
+finnaly complete it.
+After getting the PCB I see that i made mistke as it was my first time using pcb and designing it i made mistakee and the components
+did not fit there . PCB have issue. then i realized that i should make it on veroboard.
+and also i even dont be able to put the video in my stasis journel i tried every methods but i cant be able to put the video.
 
 ---
 
@@ -45,6 +60,8 @@ Here is the visual design of my Gaming Console:
 ![Project Design](./images/3D_Model6.png)
 ![Project Design](./images/3D_Model5.png)
 
+### Here is the My PCB that I not make correct
+![PCB](./images/PCB.png)
 
 ---
 

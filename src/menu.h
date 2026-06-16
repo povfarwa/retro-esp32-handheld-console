@@ -1,11 +1,12 @@
 #pragma once
-#include "globals.h"
+
+// ─────────────────────────────────────────────
+//  Main menu
+//  Returns the GAME_* ID of the selected game.
+//  Special: returns -2 for Settings, -3 for Profile
+// ─────────────────────────────────────────────
 
 namespace Menu {
-    extern bool needsRedraw;
     void init();
-    void draw();
-    void update();   // handles navigation + selection
-    bool needsDraw();
-    void setNeedsRedraw();
+    int  run();   // blocks until selection; returns GAME_* ID or -2/-3
 }

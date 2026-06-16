@@ -1,216 +1,212 @@
 #include "profile.h"
-#include "ui.h"
-#include "menu.h"
-#include "settings.h"
+#include "config.h"
+#include "display.h"
+#include "input.h"
 #include "sounds.h"
+#include "globals.h"
 #include "nvs_save.h"
 
-// Name editing state
-static int  nameLen     = 0;
-static int  charIdx     = 0;
-static bool editingName = false;
-bool Profile::needsRedraw = true;
+namespace Profile {
 
-static const char CHARSET[] = " ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%&*";
-static const int  CHARSET_LEN = 71;
-static int        charSel = 0;
+// ── STASIS GAMING Theme Colors ──
+static const uint16_t C_DARK_NAVY   = 0x0000;  // pure black
+static const uint16_t C_SLATE       = 0x8C71;  // medium gray for bars
+static const uint16_t C_NEON_BLUE   = 0x07FF;
+static const uint16_t C_NEON_CYAN   = 0x06FF;
+static const uint16_t C_PILL_GRAY   = 0x8C71;
+static const uint16_t C_BLUE_GLOW   = 0x001F;
+static const uint16_t C_CIRCUIT     = 0x00AA;
 
-// ── Draw Name field ───────────────────────────────────────────────
-// Design: label "NAME" on left, dark rounded rectangle input field
-//         with the player name inside.
-static void drawNameRow() {
-    int lx = INNER_X + 32;
-    int ly = INNER_Y + 65;
+static const char* gameNames[GAME_COUNT] = {
+    "Snake", "Space Shooter", "Samurai Fight",
+    "Maze Runner", "Dino Run", "Tetris"
+};
 
-    // "NAME" label
-    tft.setTextColor(C_TEXT, C_BG);
-    tft.setTextDatum(ML_DATUM);
-    tft.setTextSize(2);
-    tft.drawString("NAME", lx, ly + 12);
+void init() {
+    NVS::load();
+}
 
-    // Input box
-    int bx = lx + 130, bw = 190, bh = 32;
-    tft.fillRoundRect(bx, ly, bw, bh, 6, C_PILL_DARK);
-    tft.drawRoundRect(bx, ly, bw, bh, 6, editingName ? C_ACCENT : C_TEXT_DIM);
-
-    // Name text inside input
-    tft.setTextColor(C_TEXT, C_PILL_DARK);
-    tft.setTextDatum(ML_DATUM);
-    tft.setTextSize(2);
-    tft.drawString(g_app.playerName, bx + 10, ly + 14);
-
-    if (editingName) {
-        // Blinking cursor at end of text
-        if ((millis() / 300) % 2 == 0) {
-            int cx = bx + 10 + tft.textWidth(g_app.playerName, 2);
-            if (cx < bx + bw - 8)
-                tft.drawLine(cx, ly + 6, cx, ly + bh - 6, C_ACCENT);
-        }
-        // Character selector preview after cursor
-        int px = bx + 10 + tft.textWidth(g_app.playerName, 2) + 4;
-        if (px + 18 < bx + bw) {
-            tft.fillRect(px - 2, ly + 5, 18, bh - 6, C_ACCENT);
-            tft.setTextColor(C_WHITE, C_ACCENT);
-            char preview[2] = { CHARSET[charSel], 0 };
-            tft.drawString(preview, px + 2, ly + 14);
-        }
+void setHighScore(int gameIdx, uint32_t score) {
+    if (gameIdx >= 0 && gameIdx < GAME_COUNT && score > g_app.highScores[gameIdx]) {
+        g_app.highScores[gameIdx] = score;
+        NVS::save();
     }
 }
 
-// ── Draw Sounds/ID field ──────────────────────────────────────────
-// Design: label "SOUNDS" on left, matching input field with number
-static void drawSoundsRow() {
-    int lx = INNER_X + 32;
-    int ly = INNER_Y + 120;
-
-    // "SOUNDS" label
-    tft.setTextColor(C_TEXT, C_BG);
-    tft.setTextDatum(ML_DATUM);
-    tft.setTextSize(2);
-    tft.drawString("SOUNDS", lx, ly + 12);
-
-    // Matching input box
-    int bx = lx + 130, bw = 190, bh = 32;
-    tft.fillRoundRect(bx, ly, bw, bh, 6, C_PILL_DARK);
-    tft.drawRoundRect(bx, ly, bw, bh, 6, C_TEXT_DIM);
-
-    // Show number (placeholder "14" from design)
-    tft.setTextColor(C_ACCENT, C_PILL_DARK);
-    tft.setTextDatum(ML_DATUM);
-    tft.setTextSize(2);
-    tft.drawString("14", bx + 10, ly + 14);
+uint32_t getHighScore(int gameIdx) {
+    if (gameIdx >= 0 && gameIdx < GAME_COUNT)
+        return g_app.highScores[gameIdx];
+    return 0;
 }
 
-// ── Draw Scores section ───────────────────────────────────────────
-static void drawScores() {
-    int lx = INNER_X + 32;
-    int ly = INNER_Y + 175;
+static void drawCircuitPattern(int x, int y, int w, int h) {
+    for (int yy = y; yy < y + h; yy += 16) {
+        tft.drawPixel(x + 2, yy, C_CIRCUIT);
+        tft.drawPixel(x + 2, yy + 4, C_CIRCUIT);
+        tft.drawPixel(x + 6, yy + 4, C_CIRCUIT);
+        tft.drawPixel(x + 6, yy + 8, C_CIRCUIT);
+        tft.drawPixel(x + 2, yy + 8, C_CIRCUIT);
+        tft.drawPixel(x + w - 2, yy, C_CIRCUIT);
+        tft.drawPixel(x + w - 2, yy + 4, C_CIRCUIT);
+        tft.drawPixel(x + w - 6, yy + 4, C_CIRCUIT);
+        tft.drawPixel(x + w - 6, yy + 8, C_CIRCUIT);
+        tft.drawPixel(x + w - 2, yy + 8, C_CIRCUIT);
+    }
+}
 
-    // Title bar
-    tft.fillRoundRect(lx, ly, INNER_W - 64, 22, 6, C_PANEL);
-    tft.setTextColor(C_TEXT, C_PANEL);
-    tft.setTextDatum(MC_DATUM);
+static void drawTopBar() {
+    tft.fillRect(0, 0, SCREEN_W, 32, C_SLATE);
     tft.setTextSize(1);
-    tft.drawString("HIGH SCORES", lx + (INNER_W - 64) / 2, ly + 12);
+    tft.setTextColor(TFT_WHITE, C_SLATE);
+    tft.setCursor(8, 11);
+    tft.print("STASIS GAMING");
+    // Battery after text
+    tft.drawRect(100, 9, 22, 12, TFT_BLACK);
+    tft.drawRect(122, 12, 3, 6, TFT_BLACK);
+    tft.fillRect(102, 11, 5, 8, C_NEON_BLUE);
+    tft.setCursor(128, 11);
+    tft.print("25%");
 
-    // Score lines for each game
-    const char* gameNames[6] = {"SNAKE", "SPACE", "FLAPPY", "MAZE", "DINO", "RACER"};
-    for (int i = 0; i < 6; i++) {
-        int sy = ly + 30 + i * 17;
-        tft.setTextColor(C_TEXT_DIM, C_BG);
-        tft.setTextDatum(ML_DATUM);
-        tft.setTextSize(1);
-        tft.drawString(gameNames[i], lx + 10, sy + 3, 2);
-        tft.setTextColor(C_TEXT, C_BG);
-        char buf[16];
-        sprintf(buf, "%lu", g_app.highScores[i]);
-        tft.drawString(buf, lx + 150, sy + 3, 2);
+    // Center: Time
+    tft.setTextColor(TFT_WHITE, C_SLATE);
+    int timeX = (SCREEN_W - tft.textWidth("07:30 PM")) / 2;
+    tft.setCursor(timeX, 11);
+    tft.print("07:30 PM");
+
+    // Right: WiFi
+    int wifiX = SCREEN_W - 100;
+    tft.drawCircle(wifiX + 5, 15, 6, C_NEON_BLUE);
+    tft.drawCircle(wifiX + 5, 15, 3, C_NEON_BLUE);
+    tft.fillCircle(wifiX + 5, 15, 1, C_NEON_BLUE);
+    tft.setTextColor(C_NEON_BLUE, C_SLATE);
+    tft.setCursor(wifiX + 16, 7);
+    tft.print("WiFi");
+    tft.setCursor(wifiX + 16, 16);
+    tft.print("(CONNECTED)");
+}
+
+static void drawBottomBar() {
+    tft.fillRect(0, SCREEN_H - 32, SCREEN_W, 32, C_SLATE);
+
+    int spacing = SCREEN_W / 3;
+    int navY = SCREEN_H - 22;
+
+    // Back
+    tft.setTextSize(2);
+    tft.setTextColor(TFT_WHITE, C_SLATE);
+    tft.setCursor(spacing/2 - 20, navY);
+    tft.print("<");
+    tft.setTextSize(1);
+    tft.setCursor(spacing/2 - 4, navY + 4);
+    tft.print("Back");
+
+    // Settings
+    tft.setTextColor(TFT_WHITE, C_SLATE);
+    tft.setTextSize(2);
+    tft.setCursor(spacing + spacing/2 - 28, navY);
+    tft.print("*");
+    tft.setTextSize(1);
+    tft.setCursor(spacing + spacing/2 - 12, navY + 4);
+    tft.print("Settings");
+
+    // Profile highlight (active)
+    tft.fillRoundRect(spacing * 2 - 30, SCREEN_H - 28, spacing + 60, 24, 6, C_DARK_NAVY);
+    tft.setTextColor(C_NEON_BLUE, C_DARK_NAVY);
+    tft.setTextSize(2);
+    tft.setCursor(spacing * 2 + spacing/2 - 24, navY);
+    tft.print(")");
+    tft.setTextSize(1);
+    tft.setCursor(spacing * 2 + spacing/2 - 8, navY + 4);
+    tft.print("Profile");
+}
+
+static void drawFrame() {
+    for (int i = 0; i < 3; i++) {
+        tft.drawFastVLine(4 + i, 32, SCREEN_H - 64, C_BLUE_GLOW);
+        tft.drawFastVLine(SCREEN_W - 4 - i, 32, SCREEN_H - 64, C_BLUE_GLOW);
+    }
+    drawCircuitPattern(4, 36, 8, SCREEN_H - 72);
+    drawCircuitPattern(SCREEN_W - 12, 36, 8, SCREEN_H - 72);
+}
+
+static void drawPageTitle() {
+    int tw = 110;
+    int tx = (SCREEN_W - tw) / 2;
+    tft.fillRoundRect(tx, 38, tw, 18, 9, C_PILL_GRAY);
+    tft.setTextSize(1);
+    tft.setTextColor(TFT_WHITE, C_PILL_GRAY);
+    tft.setCursor(tx + (tw - tft.textWidth("PROFILE")) / 2, 41);
+    tft.print("PROFILE");
+}
+
+static void drawScreen() {
+    tft.fillScreen(C_DARK_NAVY);
+    drawTopBar();
+    drawBottomBar();
+    drawFrame();
+    drawPageTitle();
+
+    // ── Central Profile Card ──
+    int cardX = 30;
+    int cardY = 64;
+    int cardW = SCREEN_W - 60;
+    int cardH = 180;
+
+    // Card outline with neon blue border
+    tft.drawRoundRect(cardX - 2, cardY - 2, cardW + 4, cardH + 4, 12, C_NEON_CYAN);
+    tft.fillRoundRect(cardX, cardY, cardW, cardH, 10, 0x2124);
+    tft.drawRoundRect(cardX, cardY, cardW, cardH, 10, C_NEON_BLUE);
+
+    // ── NAME field ──
+    int labelX = cardX + 20;
+    int valueX = cardX + 120;
+    int row1 = cardY + 25;
+
+    tft.setTextSize(2);
+    tft.setTextColor(C_NEON_CYAN, 0x2124);
+    tft.setCursor(labelX, row1);
+    tft.print("NAME");
+
+    // Value field
+    int fw = cardW - 150;
+    tft.fillRoundRect(valueX, row1 - 2, fw, 26, 6, C_DARK_NAVY);
+    tft.drawRoundRect(valueX, row1 - 2, fw, 26, 6, C_NEON_BLUE);
+    tft.setTextColor(TFT_WHITE, C_DARK_NAVY);
+    tft.setTextSize(2);
+    tft.setCursor(valueX + 10, row1 + 3);
+    tft.print("FARWA ZAFAR");
+
+    // ── AGE field ──
+    int row2 = row1 + 50;
+
+    tft.setTextSize(2);
+    tft.setTextColor(C_NEON_CYAN, 0x2124);
+    tft.setCursor(labelX, row2);
+    tft.print("AGE");
+
+    tft.fillRoundRect(valueX, row2 - 2, 80, 26, 6, C_DARK_NAVY);
+    tft.drawRoundRect(valueX, row2 - 2, 80, 26, 6, C_NEON_BLUE);
+    tft.setTextColor(TFT_WHITE, C_DARK_NAVY);
+    tft.setTextSize(2);
+    tft.setCursor(valueX + 10, row2 + 3);
+    tft.print("14");
+}
+
+void run() {
+    // Immediately clear any leftover color from menu
+    tft.fillScreen(C_DARK_NAVY);
+    drawScreen();
+
+    while (true) {
+        Input::update();
+
+        if (Input::pressed(Input::LEFT) || Input::pressed(Input::SW)) {
+            Sounds::sfxBack();
+            return;
+        }
+
+        delay(16);
     }
 }
 
-// ── Public API ────────────────────────────────────────────────────
-
-void Profile::init() {
-    nameLen     = strlen(g_app.playerName);
-    editingName = false;
-    charIdx     = nameLen;
-    needsRedraw = true;
-}
-
-bool Profile::needsDraw() { return needsRedraw; }
-void Profile::setNeedsRedraw() { needsRedraw = true; }
-
-void Profile::draw() {
-    if (!needsRedraw) return;
-    needsRedraw = false;
-
-    UI::drawChrome("PROFILE", NavActive::PROFILE);
-    drawNameRow();
-    drawSoundsRow();
-    drawScores();
-}
-
-void Profile::update() {
-    if (editingName) {
-        // Scroll character selector (up/down)
-        if (g_input.joyY > 40 || g_input.btnBP) {
-            charSel = (charSel + 1) % CHARSET_LEN;
-            needsRedraw = true;
-            delay(100);
-        }
-        if (g_input.joyY < -40 || g_input.btnCP) {
-            charSel = (charSel - 1 + CHARSET_LEN) % CHARSET_LEN;
-            needsRedraw = true;
-            delay(100);
-        }
-
-        // Navigate cursor within name (left/right)
-        if (g_input.joyX > 40 || g_input.btnAP) {
-            if (charIdx < nameLen) { charIdx++; needsRedraw = true; delay(100); }
-        }
-        if (g_input.joyX < -40 || g_input.btnDP) {
-            if (charIdx > 0)       { charIdx--; needsRedraw = true; delay(100); }
-        }
-
-        // Insert character
-        if (g_input.joyBtnP) {
-            if (nameLen < 14) {
-                for (int i = nameLen; i > charIdx; i--)
-                    g_app.playerName[i] = g_app.playerName[i - 1];
-                g_app.playerName[charIdx] = CHARSET[charSel];
-                nameLen++; charIdx++;
-                g_app.playerName[nameLen] = '\0';
-                if (g_app.soundOn) Sounds::sfxClick();
-                needsRedraw = true;
-                delay(150);
-            }
-        }
-
-        // Backspace
-        if (g_input.btnDP && nameLen > 0 && charIdx > 0) {
-            for (int i = charIdx - 1; i < nameLen; i++)
-                g_app.playerName[i] = g_app.playerName[i + 1];
-            nameLen--; charIdx--;
-            needsRedraw = true;
-            if (g_app.soundOn) Sounds::sfxBack();
-            delay(150);
-        }
-
-        // Done editing
-        if (g_input.btnAP) {
-            editingName = false;
-            needsRedraw = true;
-            if (g_app.soundOn) Sounds::sfxSelect();
-            NVS::save();
-            delay(200);
-        }
-    } else {
-        // Start editing name
-        if (g_input.joyBtnP || g_input.btnAP) {
-            editingName = true;
-            charSel = 0;
-            nameLen = strlen(g_app.playerName);
-            charIdx = nameLen;
-            needsRedraw = true;
-            if (g_app.soundOn) Sounds::sfxClick();
-            delay(200);
-        }
-
-        // Back to menu
-        if (g_input.btnDP) {
-            g_app.screen = Screen::HOME;
-            if (g_app.soundOn) Sounds::sfxBack();
-            Menu::setNeedsRedraw();
-            delay(200);
-        }
-
-        // Settings shortcut
-        if (g_input.btnBP) {
-            g_app.prevScreen = Screen::PROFILE;
-            g_app.screen = Screen::SETTINGS;
-            if (g_app.soundOn) Sounds::sfxClick();
-            Settings::setNeedsRedraw();
-            delay(200);
-        }
-    }
-}
+} // namespace Profile

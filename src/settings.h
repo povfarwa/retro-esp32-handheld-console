@@ -1,11 +1,11 @@
 #pragma once
-#include "globals.h"
+
+// ─────────────────────────────────────────────
+//  Settings screen
+//  Sound on/off, brightness, NVS save/load
+// ─────────────────────────────────────────────
 
 namespace Settings {
-    extern bool needsRedraw;
     void init();
-    void draw();
-    void update();
-    bool needsDraw();
-    void setNeedsRedraw();
+    void run();   // blocks until user exits
 }

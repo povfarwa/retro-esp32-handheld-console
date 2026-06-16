@@ -3,19 +3,18 @@
 #include "display.h"
 #include "input.h"
 #include "sounds.h"
-#include "game_icons.h"
 
 namespace Menu {
 
 // ── STASIS GAMING Cyberpunk Theme ──
 // Deep dark slate navy with bright cyan/blue neon accents
 
-static const uint16_t C_DARK_NAVY   = 0x0000;  // darkest dark (pure black)
-static const uint16_t C_SLATE       = 0x8C71;  // medium gray (darker than before, lighter than black bg)
+static const uint16_t C_DARK_NAVY   = 0x0008;  // very dark navy
+static const uint16_t C_SLATE       = 0x39C7;  // light slate gray
 static const uint16_t C_NEON_BLUE   = 0x07FF;  // bright cyan
 static const uint16_t C_NEON_CYAN   = 0x06FF;  // electric cyan
 static const uint16_t C_CIRCUIT     = 0x00AA;  // circuit board teal
-static const uint16_t C_PILL_GRAY   = 0x8C71;  // medium gray for pill
+static const uint16_t C_PILL_GRAY   = 0x4208;  // dark gray for pill
 static const uint16_t C_STATUS_BG   = 0x4A69;  // status bar bg
 static const uint16_t C_BATTERY_BLUE= 0x061F;  // bright blue battery
 static const uint16_t C_WIFI_BLUE   = 0x061F;  // bright blue wifi
@@ -24,19 +23,19 @@ static const uint16_t C_BLUE_GLOW   = 0x001F;  // blue glow border
 struct GameEntry {
     int         id;
     const char* name;
-    int         iconIdx;   // index into gameIcons[]
+    const char* icon;
     const char* desc;
     uint16_t    color;
 };
 
 // 2×3 grid games
 static const GameEntry _games[GAME_COUNT] = {
-    { GAME_SNAKE,         "SNAKE",         0, "Eat & grow!",          TFT_CYAN     },
-    { GAME_SPACEINVADERS, "INVADERS",      1, "Shoot the aliens!",    TFT_GREEN    },
-    { GAME_PACMAN,        "SAMURAI FIGHT", 2, "Fight to the death!",   TFT_RED      },
-    { GAME_BRICKBREAKER,  "BRICK",         3, "Break all bricks!",    TFT_ORANGE   },
-    { GAME_DINORUN,       "DINO RUN",      4, "Jump over cacti!",     TFT_RED      },
-    { GAME_TETRIS,        "TETRIS",        5, "Clear the lines!",     TFT_MAGENTA  },
+    { GAME_SNAKE,         "SNAKE",         "~", "Eat & grow!",          TFT_CYAN     },
+    { GAME_SPACEINVADERS, "INVADERS",      "!", "Shoot the aliens!",    TFT_GREEN    },
+    { GAME_PACMAN,        "PAC-MAN",       "@", "Eat all dots!",        TFT_YELLOW   },
+    { GAME_BRICKBREAKER,  "BRICK",         "#", "Break all bricks!",    TFT_ORANGE   },
+    { GAME_DINORUN,       "DINO RUN",      "&", "Jump over cacti!",     TFT_RED      },
+    { GAME_TETRIS,        "TETRIS",        "%", "Clear the lines!",     TFT_MAGENTA  },
 };
 
 // Extra bottom nav items
@@ -45,7 +44,7 @@ static const GameEntry _games[GAME_COUNT] = {
 #define MENU_COUNT    (GAME_COUNT + 2) // total = 8
 
 static const char* _extraNames[2] = { "SETTINGS", "PROFILE" };
-static const uint16_t _extraColors[2] = { C_NEON_BLUE, C_NEON_BLUE };
+static const uint16_t _extraColors[2] = { C_NEON_BLUE, 0xF81F };
 
 static int _selected = 0;
 static int _prevSelected = -1;
@@ -53,10 +52,10 @@ static int _prevSelected = -1;
 // ── Grid layout ──
 static const int GRID_COLS = 3;
 static const int GRID_ROWS = 2;
-static const int GRID_X    = 18;
-static const int GRID_Y    = 88;
-static const int CELL_W    = 144;
-static const int CELL_H    = 76;
+static const int GRID_X    = 12;
+static const int GRID_Y    = 60;
+static const int CELL_W    = (SCREEN_W - 24) / GRID_COLS;  // 152
+static const int CELL_H    = 85;
 static const int CELL_GAP  = 6;
 
 // ── Draw circuit patterns ──
@@ -83,28 +82,28 @@ static void drawTopBar() {
     // Status bar background
     tft.fillRect(0, 0, SCREEN_W, 32, C_SLATE);
 
-    // ── Left: "STASIS GAMING" then Battery ──
+    // "STASIS GAMING" logo
     tft.setTextSize(1);
-    tft.setTextColor(TFT_WHITE, C_SLATE);
-    tft.setCursor(8, 11);
+    tft.setTextColor(TFT_BLACK, C_SLATE);
+    tft.setCursor(8, 6);
     tft.print("STASIS GAMING");
-    // Battery icon after text with gap
-    tft.drawRect(100, 9, 22, 12, C_BATTERY_BLUE);
-    tft.drawRect(122, 12, 3, 6, C_BATTERY_BLUE);
-    tft.fillRect(102, 11, 5, 8, C_BATTERY_BLUE);  // 25%
-    // "25%"
-    tft.setTextColor(C_BATTERY_BLUE, C_SLATE);
-    tft.setCursor(128, 11);
+
+    // Right-side status items
+    int batX = SCREEN_W - 195;  // start of right status group
+    tft.drawRect(batX, 6, 22, 12, TFT_BLACK);
+    tft.drawRect(batX + 22, 9, 3, 6, TFT_BLACK);
+    tft.fillRect(batX + 2, 8, 5, 8, C_BATTERY_BLUE);  // 25%
+    tft.setTextColor(TFT_BLACK, C_SLATE);
+    tft.setCursor(batX + 28, 7);
     tft.print("25%");
 
-    // ── Center: Time in white ──
-    tft.setTextColor(TFT_WHITE, C_SLATE);
-    int timeX = (SCREEN_W - tft.textWidth("07:30 PM")) / 2;
-    tft.setCursor(timeX, 11);
+    // Time
+    tft.setTextColor(TFT_BLACK, C_SLATE);
+    tft.setCursor(batX + 65, 7);
     tft.print("07:30 PM");
 
-    // ── Right: WiFi connected in blue ──
-    int wifiX = SCREEN_W - 100;
+    // WiFi icon + connected text (bright blue)
+    int wifiX = batX + 105;
     tft.drawCircle(wifiX + 5, 15, 6, C_WIFI_BLUE);
     tft.drawCircle(wifiX + 5, 15, 3, C_WIFI_BLUE);
     tft.fillCircle(wifiX + 5, 15, 1, C_WIFI_BLUE);
@@ -124,46 +123,47 @@ static void drawBottomBar(int activeIndex) {
     bool settingsActive = (activeIndex == MENU_SETTINGS);
     bool profileActive  = (activeIndex == MENU_PROFILE);
 
-    // Back / Settings / Profile — all on one line: "< Back"  "* Settings"  ") Profile"
-    int navY = SCREEN_H - 22;
+    // Back (always shown, never highlighted as "active")
+    int navY = SCREEN_H - 24;
     int spacing = SCREEN_W / 3;
 
-    // ── Back ──
+    // Back
     if (activeIndex == -99) backActive = false; // never active
+    uint16_t backCol = TFT_BLACK;
     tft.setTextSize(2);
-    tft.setTextColor(TFT_WHITE, C_SLATE);
-    tft.setCursor(spacing/2 - 20, navY);
-    tft.print("<");
+    tft.setTextColor(backCol, C_SLATE);
+    tft.setCursor(spacing/2 - 12, navY);
+    tft.print("<");  // arrow
     tft.setTextSize(1);
-    tft.setCursor(spacing/2 - 4, navY + 4);
+    tft.setCursor(spacing/2 - 10, navY + 14);
     tft.print("Back");
 
-    // ── Settings ──
+    // Settings
     if (settingsActive) {
-        tft.fillRoundRect(spacing - 30, SCREEN_H - 28, spacing + 60, 24, 6, C_DARK_NAVY);
+        tft.fillRoundRect(spacing - 20, SCREEN_H - 30, spacing + 40, 28, 6, C_DARK_NAVY);
         tft.setTextColor(C_NEON_BLUE, C_DARK_NAVY);
     } else {
-        tft.setTextColor(TFT_WHITE, C_SLATE);
+        tft.setTextColor(TFT_BLACK, C_SLATE);
     }
     tft.setTextSize(2);
-    tft.setCursor(spacing + spacing/2 - 28, navY);
-    tft.print("*");
+    tft.setCursor(spacing + spacing/2 - 20, navY);
+    tft.print("*");  // settings icon
     tft.setTextSize(1);
-    tft.setCursor(spacing + spacing/2 - 12, navY + 4);
+    tft.setCursor(spacing + spacing/2 - 16, navY + 14);
     tft.print("Settings");
 
-    // ── Profile ──
+    // Profile
     if (profileActive) {
-        tft.fillRoundRect(spacing * 2 - 30, SCREEN_H - 28, spacing + 60, 24, 6, C_DARK_NAVY);
-        tft.setTextColor(C_NEON_BLUE, C_DARK_NAVY);
+        tft.fillRoundRect(spacing * 2 - 20, SCREEN_H - 30, spacing + 40, 28, 6, C_DARK_NAVY);
+        tft.setTextColor(0xF81F, C_DARK_NAVY);
     } else {
-        tft.setTextColor(TFT_WHITE, C_SLATE);
+        tft.setTextColor(TFT_BLACK, C_SLATE);
     }
     tft.setTextSize(2);
-    tft.setCursor(spacing * 2 + spacing/2 - 24, navY);
+    tft.setCursor(spacing * 2 + spacing/2 - 16, navY);
     tft.print(")");
     tft.setTextSize(1);
-    tft.setCursor(spacing * 2 + spacing/2 - 8, navY + 4);
+    tft.setCursor(spacing * 2 + spacing/2 - 16, navY + 14);
     tft.print("Profile");
 }
 
@@ -186,10 +186,10 @@ static void drawFrame() {
 static void drawPageTitle() {
     int tw = 90;
     int tx = (SCREEN_W - tw) / 2;
-    tft.fillRoundRect(tx, 38, tw, 18, 9, C_PILL_GRAY);
+    tft.fillRoundRect(tx, 36, tw, 18, 9, C_PILL_GRAY);
     tft.setTextSize(1);
     tft.setTextColor(TFT_WHITE, C_PILL_GRAY);
-    tft.setCursor(tx + (tw - tft.textWidth("HOME")) / 2, 41);
+    tft.setCursor(tx + (tw - tft.textWidth("HOME")) / 2, 39);
     tft.print("HOME");
 }
 
@@ -210,9 +210,10 @@ static void drawCell(int index, bool isSelected) {
 
     const GameEntry& g = _games[gridIdx];
 
-    uint16_t bgColor = C_SLATE;  // match top/bottom bars
+    uint16_t bgColor = isSelected ? g.color : C_DARK_NAVY;
     uint16_t borderColor = isSelected ? C_NEON_CYAN : 0x2124;
-    uint16_t textColor = TFT_WHITE;  // always white, no color change on select
+    uint16_t textColor = isSelected ? TFT_BLACK : TFT_WHITE;
+    uint16_t iconColor = isSelected ? TFT_BLACK : g.color;
 
     // Outer glow when selected — erase when not
     if (isSelected) {
@@ -226,28 +227,28 @@ static void drawCell(int index, bool isSelected) {
     tft.fillRoundRect(cx, cy, CELL_W, CELL_H, 8, bgColor);
     tft.drawRoundRect(cx, cy, CELL_W, CELL_H, 8, borderColor);
 
-    // Screenshot icon area (top half) — gray bg like HOME pill
-    int iconSize = 32;
+    // Pixel art icon area (top half)
+    int iconSize = 36;
     int iconX = cx + (CELL_W - iconSize) / 2;
-    int iconY = cy + 6;
-    tft.fillRoundRect(iconX, iconY, iconSize, iconSize, 5, C_SLATE);
+    int iconY = cy + 8;
+    tft.fillRoundRect(iconX, iconY, iconSize, iconSize, 6, isSelected ? TFT_BLACK : 0x2124);
 
-    // Draw screenshot icon using TFT_eSPI pushImage
-    const IconInfo& info = gameIcons[g.iconIdx];
-    int imgX = iconX + (iconSize - info.w) / 2;
-    int imgY = iconY + (iconSize - info.h) / 2;
-    tft.pushImage(imgX, imgY, info.w, info.h, (uint16_t*)info.data, 0x0001); // transparent=0x0001
+    // Draw pixel-art style icon
+    tft.setTextSize(2);
+    tft.setTextColor(iconColor, isSelected ? TFT_BLACK : 0x2124);
+    tft.setCursor(iconX + 10, iconY + 8);
+    tft.print(g.icon);
 
     // Game name below icon
     tft.setTextSize(1);
     tft.setTextColor(textColor, bgColor);
-    tft.setCursor(cx + (CELL_W - tft.textWidth(g.name)) / 2, cy + 42);
+    tft.setCursor(cx + (CELL_W - tft.textWidth(g.name)) / 2, cy + 46);
     tft.print(g.name);
 
     // Description
     tft.setTextSize(1);
-    tft.setTextColor(0x2124, bgColor);  // dark gray, visible on slate bg
-    tft.setCursor(cx + (CELL_W - tft.textWidth(g.desc)) / 2, cy + 54);
+    tft.setTextColor(isSelected ? TFT_NAVY : 0x4208, bgColor);
+    tft.setCursor(cx + (CELL_W - tft.textWidth(g.desc)) / 2, cy + 60);
     tft.print(g.desc);
 }
 

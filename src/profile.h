@@ -1,11 +1,11 @@
 #pragma once
-#include "globals.h"
+
+// ─────────────────────────────────────────────
+//  Profile screen
+//  Shows player name and high scores
+// ─────────────────────────────────────────────
 
 namespace Profile {
-    extern bool needsRedraw;
     void init();
-    void draw();
-    void update();
-    bool needsDraw();
-    void setNeedsRedraw();
+    void run();   // blocks until user exits
 }
